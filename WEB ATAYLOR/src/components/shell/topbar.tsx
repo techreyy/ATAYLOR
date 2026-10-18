@@ -2,7 +2,8 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronRight, Menu } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
+import { NotificationBell } from "./notification-bell";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const pathname = usePathname();
@@ -42,13 +43,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       {/* Action / Indicators */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Notification Bell */}
-        <div className="relative p-2 text-dash-muted hover:text-dash-primary-strong hover:bg-dash-primary-soft rounded-lg cursor-pointer transition-colors">
-          <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-dash-primary ring-2 ring-white">
-            <span className="absolute inset-0 rounded-full bg-dash-primary animate-ping opacity-60" />
-          </span>
-        </div>
+        <NotificationBell />
       </div>
     </header>
   );

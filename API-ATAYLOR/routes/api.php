@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ExecutiveController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\KanbanController;
 use App\Http\Controllers\Api\V1\MasterDataController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\SpkController;
@@ -34,6 +35,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('products', [MasterDataController::class, 'products']);
         Route::get('marketing-closers', [MasterDataController::class, 'closers']);
+        Route::get('notifications', [NotificationController::class, 'index']);
 
         // OMS (Slice 1)
         Route::middleware('role:admin,owner,manager,designer')->group(function () {

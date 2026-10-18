@@ -21,7 +21,7 @@
   - Upload foto (bukti bayar, foto QC) dikompres di browser lewat `prepareUpload()` (`src/lib/image.ts`, sisi terpanjang 1920px, JPEG) sebelum dikirim; mockup tidak dikompres, hanya dicek ukurannya. Batas: bukti 5 MB, foto QC - **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`). Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`. mockup 8 MB.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
 - **Version control:** repo Git di root `R:JOBWeb ATAYLOR` (branch `main`). `.devtools/`, `skydash-free/`, `node_modules`, `vendor`, `.next`, dan semua `.env` **tidak** di-commit — jangan pernah commit password/APP_KEY.
-- **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 22 test / 181 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat, rincian ukuran × jenis lengan, ekspor Excel, batas ukuran bukti bayar.
+- **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 25 test / 205 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat, rincian ukuran × jenis lengan, ekspor Excel, batas ukuran bukti bayar, notifikasi per peran.
 - **Berkas upload (bukti bayar, mockup, foto QC):** disimpan di disk **privat** (`storage/app/private/tenants/{tenant_id}/...`); kolom `*_url` berisi path, dan API mengembalikan **tautan bertanda tangan yang kedaluwarsa 30 menit** (`GET /api/v1/files/{path}`, middleware `signed`). Jangan simpan upload ke disk `public`.
 - **AI & Orkestrasi Service:** Python 3.12 + FastAPI (Webhook WA, LLM Abstraction Layer: Gemini 2.5 Flash [Utama] & Claude Haiku 4.5 [Eskalasi], Mini Agent, Dynamic Lead Time Engine).
 - **Database & Multi-Tenant:** PostgreSQL 16 (Shared Database, Shared Schema dengan kolom wajib `tenant_id` + Row-Level Security / RLS). `tenant_id` ditentukan server dari membership user, **tidak pernah** dari input browser.
@@ -102,7 +102,7 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 ### 3.3 Bentuk & Layout
 - **Kartu:** `rounded-card` (20px), tanpa border, `shadow-card`, naik ke `shadow-card-hover` saat hover. Header kartu `px-5 pt-4/5`, judul tebal 15px.
 - **Sidebar:** putih (lebar 250px, bisa diciutkan ke 78px lewat tombol ☰ di navbar, tersimpan di localStorage; **di bawah 1024px menjadi drawer** yang digeser masuk dari kiri dengan latar gelap, tertutup otomatis saat pindah halaman), menu aktif/hover = latar emas `dash-primary` teks `dash-ink` `rounded-lg`, label seksi huruf kapital abu.
-- **Navbar:** putih tinggi 64px dengan `shadow-navbar`: tombol ☰, breadcrumb, lonceng notifikasi. **Tanpa** pil Otomasi / Role (dihapus 19 Okt 2026 atas permintaan pemilik — terlihat seperti pajangan dan menggandakan info sidebar).
+- **Navbar:** putih tinggi 64px dengan `shadow-navbar`: tombol ☰, breadcrumb, lonceng notifikasi (`components/shell/notification-bell.tsx`, data live `GET /notifications`). **Tanpa** pil Otomasi / Role (dihapus 19 Okt 2026 atas permintaan pemilik — terlihat seperti pajangan dan menggandakan info sidebar).
 - **Profil (atas sidebar):** satu baris ringkas — inisial, nama, nama peran; klik membuka menu "Keluar". Menu "Masuk sebagai" (ganti peran demo, badge `MOCK`) hanya tampil bila `NEXT_PUBLIC_DEMO_MODE=true` di `.env.local`; matikan saat online. Jangan pakai istilah teknis seperti "Aktor RBAC" di UI.
 - **Tombol:** primer emas teks gelap `rounded-lg`, efek angkat 1px + `shadow-primary` (bayangan emas) saat hover; `outline` = putih dengan hover emas lembut.
 - **Input:** `rounded-lg border-dash-line`; fokus global (globals.css) = border emas + ring emas 3px.
@@ -126,7 +126,7 @@ Setiap halaman wajib punya 4 state: *Normal, Loading (Skeleton), Empty State, Er
 
 | No | Modul & Route Next.js | Status Target 3 Hari | Fitur Utama yang Harus Tampil |
 |---|---|---|---|
-| 1 | **Auth & Global Shell** (`/login`, `/`) | **Live Layout + Role Switcher** | Login, Role Switcher demo (Admin/Owner/Manager/Designer/SuperAdmin). |
+| 1 | **Auth & Global Shell** (`/login`, `/`) | **Live Layout + Role Switcher** | Login, Role Switcher demo (Admin/Owner/Manager/Designer/SuperAdmin), lonceng notifikasi "Perlu Ditindaklanjuti" per peran (live). |
 | 2 | **OMS / Pesanan** (`/orders`, `/orders/new`, `/orders/[id]`) | **REAL BACKEND (Slice 1)** | Tabel order + filter (ID, kanal, status, tanggal), form tambah order (wajib Closer jika Offline, rincian qty per ukuran × jenis lengan + toggle Custom Lanjutan), kalkulasi Total, DP min (`dp_min_percent`), Saldo. |
 | 3 | **Kasir & Pembayaran** (`/payments`) | **REAL BACKEND (Slice 1)** | Validasi bukti bayar manual, input tunai/transfer, status Slot Lock 24j, tombol "Validasi Pembayaran" (kunci kuota permanen). |
 | 4 | **Kanban WIP** (`/production/kanban`) | **REAL BACKEND (Slice 2)** | Board 5 kolom resmi (BR-12). Geser maju 1 tahap; modal wajib alasan jika mundur + log riwayat WIP. |
@@ -274,6 +274,19 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-19] — Claude (Claude Code) — Lonceng Notifikasi "Perlu Ditindaklanjuti"
+- **Masalah:** lonceng navbar hanya hiasan bawaan template (tanpa aksi, titik berkedip selalu menyala).
+- **Dikerjakan (opsi A pemilik):**
+  1. **Backend** `GET /api/v1/notifications` (semua peran login) → `NotificationService`: dihitung langsung dari data terkini, tanpa tabel baru; item hilang sendiri setelah ditangani. Urutan: danger → warning → info, lalu terbaru; maks 30 item + `total` & `urgent`.
+     - **Admin:** pembayaran menunggu validasi, slot lock 24 jam masih berjalan (danger bila ≤ 6 jam), siap terbitkan SPK (gerbang BR-09 lengkap), SLA desain terlewat/≤ 3 jam, pesanan lewat tenggat, menunggu pelunasan.
+     - **Owner:** lewat tenggat, SPK belum diserahkan ke vendor (BR-27), menunggu pelunasan.
+     - **Manager:** lewat tenggat, SPK belum diserahkan ke vendor. **Designer:** SLA desain. **Super Admin:** kosong.
+     - Pesanan selesai/dibatalkan/kedaluwarsa tidak dihitung tenggatnya.
+  2. **Frontend** `components/shell/notification-bell.tsx` (+ repository/adapter `notification`): angka di lonceng (merah + berdenyut bila ada yang mendesak, emas bila tidak; hilang bila kosong), panel "Perlu Ditindaklanjuti" berisi titik warna, judul, kode pesanan, keterangan; klik item membuka pesanan (SPK belum didispatch → `/production/spk`). Dimuat ulang saat pindah halaman, setiap 60 detik, dan saat dibuka; tombol muat ulang; state loading/kosong/gagal. Tutup dengan klik di luar / Esc.
+- **File diubah:** `API-ATAYLOR/app/Services/NotificationService.php` (baru), `app/Http/Controllers/Api/V1/NotificationController.php` (baru), `routes/api.php`, `tests/Feature/NotificationTest.php` (baru); `WEB ATAYLOR/src/components/shell/{notification-bell (baru),topbar}.tsx`, `src/core/types/notification.types.ts`, `src/core/repositories/notification.repository.ts`, `src/core/adapters/api/api-notification.adapter.ts` (baru), `AI_GUA.md` (§1, §3.3, §4).
+- **Verifikasi:** `JALANKAN-TEST.bat` → 25 passed (205 assertions); test baru: isi Admin (pending/tenggat/pelunasan, tanpa dispatch), urutan danger dulu, Owner melihat SPK belum didispatch, Designer hanya SLA desain, item hilang setelah pembayaran ditolak. `tsc --noEmit` bersih, `npm run build` lulus, server 3000 dijalankan ulang. Chrome (Admin, data demo): lonceng "3", panel berisi SLA desain terlewat ORD-2026-005, lewat tenggat ORD-2026-006, siap terbitkan SPK ORD-2026-004; klik item membuka ORD-2026-006 dan panel menutup. Lebar 375px: panel pas (16px kiri-kanan). Tampilan Owner/Manager/Designer hanya diuji lewat test, belum dilihat di browser.
+- **Next Action:** bila nanti perlu "tandai sudah dibaca" atau notifikasi WA/email, tambahkan tabel notifikasi tersendiri.
 
 ### [2026-10-19] — Claude (Claude Code) — Profil Sidebar Ringkas & Sakelar Otomasi Pindah ke Owner
 - **Dikerjakan (keputusan pemilik: opsi A):**
