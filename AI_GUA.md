@@ -201,6 +201,58 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 - [x] Nomor urut order/SPK dibandingkan sebagai angka (tidak bentrok setelah 999/9999).
 - [ ] Sebelum online: `APP_DEBUG=false`, `DEMO_LOGIN_ENABLED=false`, batasi CORS ke domain frontend, ganti semua password DB, token login jangan di localStorage.
 
+### Kebutuhan Fase 4 — Integrasi WhatsApp & AI (BELUM dikerjakan, daftar kebutuhan saja)
+> Sumber: SRS v1.0 (FR-CB, FR-MA, FR-AT), Arsitektur v2.0 (§4.2, §5.3, §5.5, §7.1, §8.2, §9), PRD v9.0. Angka biaya **tidak ada** di folder `ATAYLOR BAHAN` (dokumen "Rekomendasi Arsitektur Sistem & Analisis Biaya Operasional" yang dirujuk belum tersedia).
+
+**Alur:** Pelanggan WA → Meta Cloud API (webhook) → **FastAPI** (verifikasi signature, percakapan, LLM, Mini Agent) → API internal **Laravel** (sumber kebenaran harga, stok, kapasitas, jadwal, status bayar). **LLM tidak boleh menjadi sumber angka**; semua angka mengikat diambil dari Laravel.
+
+**A. API / layanan eksternal**
+
+| Layanan | Fungsi | Yang dibutuhkan |
+|---|---|---|
+| Meta WhatsApp Business Platform — **Cloud API langsung** (tanpa BSP) | Terima/kirim pesan, tombol ACC/Revisi, template | Lihat bagian B |
+| Google **Gemini 2.5 Flash** | Model utama percakapan rutin | API key (AI Studio/Vertex AI) + billing |
+| Anthropic **Claude Haiku 4.5** | Model eskalasi (negosiasi, ambigu, komplain) | API key + billing |
+| Cloudflare **R2** (S3-compatible) | Media privat (mockup, bukti bayar, foto QC); mockup harus dapat diambil Meta | Bucket + access key; ganti disk `local` → R2 |
+| **VPS + domain + HTTPS** | Endpoint webhook publik (Meta tidak bisa ke localhost); uji coba boleh lewat tunnel | Docker Compose: reverse proxy, web, Laravel app/worker, FastAPI, Redis, PostgreSQL |
+| **Redis** + Laravel Queue/Horizon | Webhook dijawab cepat, proses AI di antrean; antrean dipisah per prioritas | Terpasang di VPS |
+| Email/SMTP (opsional) | Eskalasi Owner & laporan | Akun SMTP |
+
+Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman, routing model, redaksi PII, log token/biaya, budget guard, fallback eskalasi ke Admin) agar model bisa diganti tanpa mengubah logika bisnis.
+
+**B. Yang harus disiapkan Owner/klien (paling lama — mulai lebih dulu)**
+- [ ] **Meta Business Portfolio** terverifikasi (dokumen usaha).
+- [ ] **Nomor WhatsApp khusus bisnis** yang tidak aktif di aplikasi WA/WA Business di HP (atau dimigrasikan) + **nama tampilan** disetujui Meta.
+- [ ] Kredensial Meta Developer: **App ID, App Secret** (verifikasi signature webhook), **Phone Number ID, WhatsApp Business Account ID, token akses permanen (System User)**, verify token webhook. Disimpan di `.env`, **tidak boleh** masuk git/log.
+- [ ] **Template pesan disetujui Meta** (wajib di luar jendela 24 jam — FR-MA-08): proofing desain + tombol ACC/Minta Revisi (FR-MA-01), pengingat ACC (FR-MA-06), instruksi pembayaran setelah ACC (FR-MA-03), slot dilepas (BR-07), pesanan selesai + foto QC + tagihan pelunasan (FR-MA-07, BR-24).
+- [ ] Persetujuan Owner: batas diskon/negosiasi, komitmen yang boleh diucapkan AI, kondisi eskalasi (BR-25), kebijakan retensi chat & consent, batas biaya WA/LLM per tenant.
+
+**C. Fungsi yang harus dipenuhi**
+- **Chatbot (FR-CB-01..12):** 24/7; kumpulkan brief (produk, kain, qty, warna, ukuran, logo, tenggat); jawab katalog/size chart/MOQ; cek stok & tawarkan Fast Track (BR-14); hitung Dynamic Lead Time & tolak/usulkan tanggal saat penuh (BR-15, BR-16); patuhi persona & daftar harga, tanpa diskon di luar batas (BR-20); eskalasi ke Admin bila ragu/diminta/komplain; simpan riwayat chat terkait pesanan; terima gambar & pesan suara; bahasa Indonesia.
+- **Mini Agent (FR-MA-01..09):** kirim mockup dengan tombol ACC/Revisi (sekali pakai per versi); catat bukti ACC (waktu, nomor, versi, ID pesan); picu slot lock 24 jam + instruksi bayar; buka tiket revisi; pengingat ACC; notifikasi selesai + foto QC + tagihan; mode Off = hanya buat tiket tanpa kirim WA (BR-21).
+- **AI Training Dashboard (FR-AT-01..08):** CRUD produk/harga/MOQ/kapasitas/SLA, tone & larangan kata, aturan negosiasi, sinkron ke chatbot ≤ 60 detik, versi + rollback, sandbox chat, validasi input, terisolasi per tenant.
+
+**D. Yang belum ada di sistem (harus dibangun)**
+- [ ] Service **FastAPI** (Python 3.12): adapter webhook (signature, normalisasi, deduplikasi message ID, pemetaan integrasi → tenant), percakapan, prompt/model routing, guardrail, Mini Agent.
+- [ ] Tabel: `customers`, `conversations`, `messages`, `channel_integrations`, `webhook_events`, `ai_configs`, `ai_config_versions`, `knowledge_documents`, `knowledge_chunks`, `conversation_ai_runs` (Arsitektur §8.2) — semua `tenant_id` + RLS.
+- [ ] API internal Laravel untuk AI (kredensial service-to-service, tidak diekspos publik): `get_product_context`, `check_inventory`, `calculate_lead_time`, `create_design_ticket`, `get_order_status`, `submit_handoff`, `send_customer_update`; endpoint `POST /api/v1/webhooks/whatsapp/{integration_id}`.
+- [ ] **Mesin kapasitas & Dynamic Lead Time** deterministik (BR-03, BR-15, BR-16) — prasyarat chatbot menjanjikan tanggal.
+- [ ] AI Training Dashboard & Inventory tersambung database (sekarang MOCK).
+- [ ] Idempotensi: webhook ganda tidak boleh membuat ACC/order/pembayaran ganda; status pesan sent/delivered/failed & rate limit ditangani.
+- [ ] Observabilitas & biaya: latency p50/p95 webhook→kirim, token & biaya per tenant/model, rasio eskalasi, guardrail trips; runbook (token WA kedaluwarsa, LLM down, lonjakan biaya).
+
+**E. Komponen biaya (cek halaman harga resmi sebelum penawaran)**
+- WhatsApp: biaya per pesan template (kategori marketing/utility); balasan di dalam jendela 24 jam setelah pelanggan chat umumnya tidak dikenai biaya.
+- Gemini & Claude: per token input/output.
+- VPS, domain, R2: bulanan.
+
+**F. Urutan kerja yang disarankan**
+1. Klien mulai verifikasi Meta Business & nomor WA (paralel).
+2. Mesin kapasitas/lead time → AI Training & Inventory nyata → API internal AI.
+3. FastAPI (webhook + percakapan + LLM) diuji dengan nomor tes Meta + tunnel.
+4. Mini Agent setelah template disetujui.
+5. Pengamanan sebelum online (Fase 3) → deploy VPS → uji tenant uji.
+
 ---
 
 ## 7. PROTOKOL KERJA AI (CLAUDE & GEMINI)
@@ -216,6 +268,10 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-18] — Claude (Claude Code) — Daftar Kebutuhan Integrasi WhatsApp & AI
+- **Dikerjakan:** Menambah subbagian **§6 "Kebutuhan Fase 4 — Integrasi WhatsApp & AI"** (dokumentasi saja, belum ada kode): alur WA → FastAPI → Laravel, daftar API eksternal (Meta Cloud API, Gemini 2.5 Flash, Claude Haiku 4.5, R2, VPS/HTTPS, Redis, SMTP), syarat yang harus disiapkan klien (verifikasi Meta, nomor WA, kredensial, template), fungsi FR-CB/FR-MA/FR-AT, komponen yang belum dibangun, komponen biaya, dan urutan kerja. Sumber: SRS v1.0, Arsitektur v2.0, PRD v9.0.
+- **Catatan:** angka biaya tidak tersedia di `ATAYLOR BAHAN`; dokumen "Rekomendasi Arsitektur Sistem & Analisis Biaya Operasional" belum ada.
 
 ### [2026-10-18] — Claude (Claude Code) — Script JALANKAN-TEST.bat
 - **Dikerjakan:** `JALANKAN-TEST.bat` di root: menyalakan PostgreSQL bila mati, menjalankan `php artisan test` dengan PHP portable, menampilkan ringkasan lulus/gagal. §1 diperbarui (perintah `php` biasa tidak dikenali karena PHP portable tidak ada di PATH).
