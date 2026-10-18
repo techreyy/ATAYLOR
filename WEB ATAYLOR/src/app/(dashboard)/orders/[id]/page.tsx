@@ -30,6 +30,7 @@ import { Order, SpkGate } from "@/core/types/order.types";
 import { PaymentMethod } from "@/core/types/payment.types";
 import { orderStatusMeta, stageLabel } from "@/lib/constants";
 import { formatRupiah } from "@/lib/currency";
+import { groupBySleeve, sizeColumns } from "@/lib/order-items";
 import { useRole } from "@/components/shell/role-context";
 
 function useCountdown(target?: string | null) {
@@ -142,6 +143,9 @@ export default function OrderDetailPage() {
   const awaitingAcc = order.status === "menunggu_acc" && latest && !latest.approval;
   const canRecordPayment = isAdmin && !["selesai", "dibatalkan"].includes(order.status) && order.remainingBalance > 0;
   const gateOk = gate ? gate.payment_valid && gate.slot_permanent && gate.design_approved && gate.not_issued : false;
+  const sleeveGroups = groupBySleeve(order.items);
+  const sizes = sizeColumns(order.items);
+  const totalQty = sleeveGroups.reduce((sum, g) => sum + g.totalQty, 0);
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
@@ -223,31 +227,53 @@ export default function OrderDetailPage() {
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle>Rincian Item Pesanan</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-dash-line text-zinc-500 text-[11px] uppercase font-semibold tracking-wider">
-                <th className="py-2 px-3">Produk</th>
-                <th className="py-2 px-3">Warna</th>
-                <th className="py-2 px-3">Ukuran</th>
-                <th className="py-2 px-3 text-right">Qty</th>
-                <th className="py-2 px-3 text-right">Harga Satuan</th>
-                <th className="py-2 px-3 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {order.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="py-2.5 px-3 font-semibold text-zinc-900">{item.productName}</td>
-                  <td className="py-2.5 px-3 text-zinc-500">{item.color}</td>
-                  <td className="py-2.5 px-3 font-mono">{item.size}</td>
-                  <td className="py-2.5 px-3 font-mono tabular-nums text-right">{item.qty} pcs</td>
-                  <td className="py-2.5 px-3 font-mono tabular-nums text-right">{formatRupiah(item.unitPrice)}</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-zinc-900 tabular-nums">{formatRupiah(item.subtotal)}</td>
+        <CardContent className="p-0">
+          <div className="px-5 pb-2 text-xs text-zinc-500 flex flex-wrap gap-x-4 gap-y-1">
+            <span>
+              Produk: <strong className="text-zinc-900">{unique(order.items.map((i) => i.productName ?? "-"))}</strong>
+            </span>
+            <span>
+              Warna: <strong className="text-zinc-900">{unique(order.items.map((i) => i.color))}</strong>
+            </span>
+            <span>
+              Harga Satuan: <strong className="font-mono tabular-nums text-zinc-900">{unique(order.items.map((i) => formatRupiah(i.unitPrice)))}</strong>
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-y border-dash-line text-zinc-500 text-[11px] uppercase font-semibold tracking-wider">
+                  <th className="py-2 px-3">Jenis Lengan</th>
+                  {sizes.map((s) => (
+                    <th key={s} className="py-2 px-2 text-center font-mono">{s}</th>
+                  ))}
+                  <th className="py-2 px-3 text-right">Jumlah</th>
+                  <th className="py-2 px-3 text-right">Subtotal</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {sleeveGroups.map((g) => (
+                  <tr key={g.sleeveType}>
+                    <td className="py-2.5 px-3 font-semibold text-zinc-900 whitespace-nowrap">{g.label}</td>
+                    {g.sizes.map((s) => (
+                      <td key={s.size} className={`py-2.5 px-2 text-center font-mono tabular-nums ${s.qty ? "text-zinc-900 font-semibold" : "text-zinc-300"}`}>
+                        {s.qty}
+                      </td>
+                    ))}
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums font-bold whitespace-nowrap">→ {g.totalQty} pcs</td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums whitespace-nowrap">{formatRupiah(g.subtotal)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-dash-line font-bold text-zinc-900">
+                  <td colSpan={sizes.length + 1} className="py-2.5 px-3 text-right">Total Qty</td>
+                  <td className="py-2.5 px-3 text-right font-mono tabular-nums whitespace-nowrap">{totalQty} pcs</td>
+                  <td className="py-2.5 px-3 text-right font-mono tabular-nums whitespace-nowrap">{formatRupiah(order.totalAmount)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
@@ -589,6 +615,11 @@ export default function OrderDetailPage() {
       )}
     </div>
   );
+}
+
+/** Gabungkan nilai unik untuk ringkasan (pesanan lama bisa berisi lebih dari satu produk/warna). */
+function unique(values: string[]) {
+  return Array.from(new Set(values)).join(", ") || "-";
 }
 
 function Row({ label, value, last }: { label: React.ReactNode; value: React.ReactNode; last?: boolean }) {

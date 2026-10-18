@@ -12,4 +12,6 @@ export interface ISpkRepository {
 export interface IExecutiveRepository {
   getSummary(period: { from?: string; to?: string }): Promise<ExecutiveSummary>;
   downloadCsv(period: { from?: string; to?: string }): Promise<void>;
+  // Excel: rincian item + kolom kosong biaya produksi untuk diisi manual
+  downloadExcel(period: { from?: string; to?: string }): Promise<void>;
 }

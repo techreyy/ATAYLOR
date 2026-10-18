@@ -17,6 +17,7 @@ class OrderItemResource extends JsonResource
             'productName' => $this->whenLoaded('product', fn () => $this->product->name),
             'skuCode' => $this->sku_code,
             'color' => $this->color,
+            'sleeveType' => $this->sleeve_type ?? 'pendek',
             'size' => $this->size,
             'qty' => $this->qty,
             'unitPrice' => $this->unit_price,

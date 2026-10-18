@@ -1,4 +1,5 @@
 import { apiFetch } from "@/core/api/client";
+import { UPLOAD_LIMITS_MB, prepareUpload } from "@/lib/image";
 import type { IPaymentRepository } from "@/core/repositories/payment.repository";
 import type { PaymentMethod, PaymentRecord, PaymentStatus } from "@/core/types/payment.types";
 
@@ -15,7 +16,7 @@ class ApiPaymentAdapter implements IPaymentRepository {
     form.append("method", input.method);
     form.append("amount", String(input.amount));
     if (input.notes) form.append("notes", input.notes);
-    if (input.proof) form.append("proof", input.proof);
+    if (input.proof) form.append("proof", await prepareUpload(input.proof, UPLOAD_LIMITS_MB.paymentProof, "Bukti bayar"));
     return (await apiFetch<{ data: PaymentRecord }>(`/orders/${orderId}/payments`, { method: "POST", body: form })).data;
   }
 

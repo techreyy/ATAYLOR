@@ -14,11 +14,14 @@
 - **Pola Arsitektur:** Layered Architecture + Modular Monolith (Laravel) + AI Service terpisah (FastAPI).
 - **Frontend Web:** Next.js 15 (App Router), React, TypeScript, Tailwind CSS **3.4**, Lucide Icons, shadcn/ui pattern. Lokasi: folder `WEB ATAYLOR/`.
 - **Backend Inti (Sumber Kebenaran Bisnis):** **Laravel 12** (PHP 8.3) + Sanctum (token API) — Pola: `Controller tipis -> FormRequest -> Service -> Eloquent -> PostgreSQL`. Lokasi: folder `API-ATAYLOR/` (API di `/api/v1`, aturan bisnis di `app/Services/`).
+  - Ekspor Excel memakai `phpoffice/phpspreadsheet` ^5 (`app/Services/ExecutiveExcelExport.php`).
   - Catatan: spesifikasi awal menyebut Laravel 11, tetapi Laravel 11 sudah habis masa dukungan keamanan dan diblokir Composer karena 7 security advisory — **jangan turunkan ke 11**.
 - **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`). Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`.
+  - `.devtools/php/php.ini`: `upload_max_filesize = 10M`, `post_max_size = 12M` (bawaan PHP 2M/8M membuat foto HP gagal diunggah). `.devtools` tidak di-commit — **set nilai yang sama di server produksi** (dan `client_max_body_size` bila memakai Nginx). Setelah mengubah php.ini, server API harus dijalankan ulang.
+  - Upload foto (bukti bayar, foto QC) dikompres di browser lewat `prepareUpload()` (`src/lib/image.ts`, sisi terpanjang 1920px, JPEG) sebelum dikirim; mockup tidak dikompres, hanya dicek ukurannya. Batas: bukti 5 MB, foto QC - **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`). Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`. mockup 8 MB.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
 - **Version control:** repo Git di root `R:JOBWeb ATAYLOR` (branch `main`). `.devtools/`, `skydash-free/`, `node_modules`, `vendor`, `.next`, dan semua `.env` **tidak** di-commit — jangan pernah commit password/APP_KEY.
-- **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 12 test / 112 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat.
+- **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 22 test / 181 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat, rincian ukuran × jenis lengan, ekspor Excel, batas ukuran bukti bayar.
 - **Berkas upload (bukti bayar, mockup, foto QC):** disimpan di disk **privat** (`storage/app/private/tenants/{tenant_id}/...`); kolom `*_url` berisi path, dan API mengembalikan **tautan bertanda tangan yang kedaluwarsa 30 menit** (`GET /api/v1/files/{path}`, middleware `signed`). Jangan simpan upload ke disk `public`.
 - **AI & Orkestrasi Service:** Python 3.12 + FastAPI (Webhook WA, LLM Abstraction Layer: Gemini 2.5 Flash [Utama] & Claude Haiku 4.5 [Eskalasi], Mini Agent, Dynamic Lead Time Engine).
 - **Database & Multi-Tenant:** PostgreSQL 16 (Shared Database, Shared Schema dengan kolom wajib `tenant_id` + Row-Level Security / RLS). `tenant_id` ditentukan server dari membership user, **tidak pernah** dari input browser.
@@ -85,19 +88,20 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 2. **Hanya token tema.** Pakai kelas `dash-*` dari `WEB ATAYLOR/tailwind.config.ts`; jangan menulis hex baru di halaman kecuali benar-benar perlu.
 3. **Tanpa library grafik/animasi berat** (Recharts, Chart.js, Framer Motion). Grafik = Pure CSS/SVG; animasi = keyframes Tailwind/CSS.
 4. **Tanpa gradient** pada kartu & teks (Skydash memakai warna solid).
-5. **Ubah tampilan lewat komponen dasar dulu** (`components/ui/*`, `components/shell/*`) sebelum mengedit kelas di halaman.
+5. **Ubah tampilan lewat komponen dasar dulu** (`components/ui/*`, `components/shell/*`) sebelum mengedit kelas di halaman. Komponen form yang tersedia: `SegmentedControl` (pilihan pil), `Switch` (sakelar), `QtyStepper` (angka bulat ≥ 0 dengan tombol −/+).
+6. **Wajib responsif HP (≥ 360px) tanpa mengubah desain desktop:** tabel dibungkus `overflow-x-auto` (judul kolom otomatis satu baris), grid mulai 1 kolom lalu `md:`/`lg:`, tinggi minimum kolom/kartu hanya di `md:` ke atas. Cek dengan lebar 375px: tidak boleh ada konten terpotong atau scroll horizontal halaman.
 
 ### 3.2 Palet Warna (token `dash-*`)
 - **Primer (emas logo):** `dash-primary` #F5B800 (hover `dash-primary-hover` #E0A700, latar lembut `dash-primary-soft` #FFF5D1).
   - **Kontras wajib:** teks/ikon di atas latar emas = `text-dash-ink` (#1F1F1F), **jangan putih**. Teks/link emas di atas latar putih = `text-dash-primary-strong` (#9A6B00), **jangan `text-dash-primary`**.
 - **Kanvas:** `dash-bg` #F7F6F2 (krem hangat); kartu `bg-white`; garis `dash-line` #ECEAE3; hover tabel `dash-hover` #F3F0E6; teks `dash-text` #1F1F1F; teks redup `dash-muted` #6C7383.
 - **Kartu KPI (pola Skydash):** emas `dash-primary` (teks `dash-ink`) · arang `dash-charcoal` #232227 · biru langit `dash-tale` #7DA0FA · coral `dash-light-danger` #F3797E (tiga terakhir teks putih).
-- **Semantik:** success #57B657 · warning #FFC100 · danger #FF4747 · info #248AFD · grafik sekunder `dash-sky` #98BDFF.
+- **Semantik:** success #57B657 · warning #FFC100 · danger #FF4747 · info #248AFD · grafik sekunder `dash-sky` #98BDFF. Peringatan merah lembut: `dash-danger-soft` (latar) / `dash-danger-line` (garis) / `dash-danger-strong` (teks) — sama dengan `<Notice tone="error">`.
 - **Badge status** (komponen `<Badge>`): pil `rounded-full`, latar lembut + teks warna semantik — `blue` (Brief/Baru), `amber` (Menunggu ACC/Bayar/Lock 24j), `emerald` (Valid/SPK/Selesai), `red` (Revisi/Rework/Terlambat), `zinc` → arang lembut (WIP Produksi), `slate` (netral). Penanda simulasi tetap `<DemoMockBadge />` bertuliskan `MOCK`.
 
 ### 3.3 Bentuk & Layout
 - **Kartu:** `rounded-card` (20px), tanpa border, `shadow-card`, naik ke `shadow-card-hover` saat hover. Header kartu `px-5 pt-4/5`, judul tebal 15px.
-- **Sidebar:** putih (lebar 250px, bisa diciutkan ke 78px lewat tombol ☰ di navbar, tersimpan di localStorage), menu aktif/hover = latar emas `dash-primary` teks `dash-ink` `rounded-lg`, label seksi huruf kapital abu.
+- **Sidebar:** putih (lebar 250px, bisa diciutkan ke 78px lewat tombol ☰ di navbar, tersimpan di localStorage; **di bawah 1024px menjadi drawer** yang digeser masuk dari kiri dengan latar gelap, tertutup otomatis saat pindah halaman), menu aktif/hover = latar emas `dash-primary` teks `dash-ink` `rounded-lg`, label seksi huruf kapital abu.
 - **Navbar:** putih tinggi 64px dengan `shadow-navbar`, pil Otomasi & Role `rounded-full`.
 - **Tombol:** primer emas teks gelap `rounded-lg`, efek angkat 1px + `shadow-primary` (bayangan emas) saat hover; `outline` = putih dengan hover emas lembut.
 - **Input:** `rounded-lg border-dash-line`; fokus global (globals.css) = border emas + ring emas 3px.
@@ -108,7 +112,7 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 - **Wajib `tabular-nums`** untuk nominal Rp, DP, sisa tagihan, qty, dan hitungan mundur.
 
 ### 3.5 Animasi (halus, ringan)
-- Pindah halaman/ganti peran: konten `animate-fade-in-up`; beranda memakai `.dash-stagger` (anak muncul berurutan).
+- Pindah halaman/ganti peran: konten `animate-fade-in-up`; beranda memakai `.dash-stagger` (anak muncul berurutan). Keduanya memakai fill-mode `backwards` — **jangan diganti `both`/`forwards`**: transform yang tertinggal membuat modal `fixed` di dalam halaman terkurung di area konten.
 - Modal: latar `animate-fade-in` + blur tipis, panel `animate-scale-in`. Notifikasi `animate-slide-down`.
 - Skeleton: kilau `dash-shimmer animate-shimmer`. Grafik batang `animate-grow-up`, progress bar `animate-grow-right`.
 - Hover: kartu KPI naik 4px, tombol naik 1px, ikon sidebar membesar sedikit. Lonceng notifikasi `animate-ping`.
@@ -122,11 +126,11 @@ Setiap halaman wajib punya 4 state: *Normal, Loading (Skeleton), Empty State, Er
 | No | Modul & Route Next.js | Status Target 3 Hari | Fitur Utama yang Harus Tampil |
 |---|---|---|---|
 | 1 | **Auth & Global Shell** (`/login`, `/`) | **Live Layout + Role Switcher** | Login, Role Switcher demo (Admin/Owner/Manager/Designer/SuperAdmin). |
-| 2 | **OMS / Pesanan** (`/orders`, `/orders/new`, `/orders/[id]`) | **REAL BACKEND (Slice 1)** | Tabel order + filter (ID, kanal, status, tanggal), form tambah order (wajib Closer jika Offline), kalkulasi Total, DP min (`dp_min_percent`), Saldo. |
+| 2 | **OMS / Pesanan** (`/orders`, `/orders/new`, `/orders/[id]`) | **REAL BACKEND (Slice 1)** | Tabel order + filter (ID, kanal, status, tanggal), form tambah order (wajib Closer jika Offline, rincian qty per ukuran × jenis lengan + toggle Custom Lanjutan), kalkulasi Total, DP min (`dp_min_percent`), Saldo. |
 | 3 | **Kasir & Pembayaran** (`/payments`) | **REAL BACKEND (Slice 1)** | Validasi bukti bayar manual, input tunai/transfer, status Slot Lock 24j, tombol "Validasi Pembayaran" (kunci kuota permanen). |
 | 4 | **Kanban WIP** (`/production/kanban`) | **REAL BACKEND (Slice 2)** | Board 5 kolom resmi (BR-12). Geser maju 1 tahap; modal wajib alasan jika mundur + log riwayat WIP. |
 | 5 | **SPK & Dispatch** (`/production/spk`, `/production/spk/[id]/print`) | **REAL BACKEND (Slice 3)** | Gate BR-09. Preview A4 siap cetak/PDF bernomor unik + Form Dispatch Vendor (khusus Owner/Manager). |
-| 6 | **Executive Dashboard** (`/executive`) | **REAL BACKEND (Slice 4)** | Filter periode, KPI (Omzet, Total Order, Online vs Offline, Bottleneck), Chart SVG, Leaderboard Marketing (`MOCK`), **Export CSV** & **Print/PDF Recap**. |
+| 6 | **Executive Dashboard** (`/executive`) | **REAL BACKEND (Slice 4)** | Filter periode, KPI (Omzet, Total Order, Online vs Offline, Bottleneck), Chart SVG, Leaderboard Marketing (`MOCK`), **Export CSV**, **Export Excel** (kolom kosong biaya produksi + rumus laba) & **Print/PDF Recap**. |
 | 7 | **CRM Designer** (`/designer`) | **UI + Mock Adapter** | Board tiket (`Baru`, `Dikerjakan`, `Menunggu ACC`, `Revisi`, `Selesai`), SLA countdown, upload mockup berversi (`v1`, `v2`), log ACC. |
 | 8 | **Inventory Gudang** (`/inventory`) | **UI + Mock Adapter** | Daftar SKU (Produk, Ukuran, Warna), Stok Tersedia vs Reservasi Fast Track, modal Penyesuaian Stok + alasan audit. |
 | 9 | **AI Training Dashboard** (`/ai-training`) | **UI + Mock Adapter** | CRUD Katalog (Harga, MOQ, Kapasitas Harian, SLA Desain, DP min), Persona/Tone AI, batas negosiasi, tombol Sync (<60s) & Sandbox Chat. |
@@ -156,7 +160,8 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 9. `orders`: `id, tenant_id, order_code (unik per tenant), customer_name, customer_wa, channel (online/offline), marketing_closer_id (wajib jika offline), status (lihat 2.7), wip_stage (null/antrean/proses_jahit/proses_bordir_sablon/qc_pabrik/tiba_di_gudang), total_amount, dp_required, paid_amount, remaining_balance, due_date, slot_lock_status (none/temp_24h/permanent/expired), slot_lock_expires_at, revision_count, notes, created_by`
    - Kolom tambahan yang sudah ada di migrasi: `payments.recorded_by`, `design_tickets.last_feedback`, `design_approvals.recorded_by`, `spk_documents.dispatched_at`. Nominal uang = `bigint` Rupiah.
    - RLS aktif (FORCE) di semua tabel bisnis; role DB aplikasi `ataylor_app` bukan superuser. Lihat `API-ATAYLOR/database/migrations/2026_10_18_100100_enable_tenant_rls.php`.
-10. `order_items`: `id, tenant_id, order_id, product_id, variant_id (nullable), sku_code, color, size, qty, unit_price, subtotal`
+10. `order_items`: `id, tenant_id, order_id, product_id, variant_id (nullable), sku_code, color, size (S/M/L/XL/XXL/3XL), sleeve_type (pendek/panjang, default pendek), qty, unit_price, subtotal`
+    - Satu baris = satu kombinasi (jenis lengan, ukuran) per pesanan. `POST /orders` menerima `product_id`, `color` (Kombinasi Warna Bahan) dan `items: [{sleeve_type, size, qty}]` (qty ≥ 1, kombinasi tidak boleh ganda); `unit_price` diambil dari `products.base_price`, MOQ dicek terhadap **total qty** (server + UI). Konstanta: `OrderItem::SIZES/SLEEVE_TYPES` (backend), `ORDER_SIZES/SLEEVE_TYPES` di `src/lib/constants.ts` (frontend).
 11. `payments`: `id, tenant_id, order_id, method (cash/transfer), amount, proof_url, status (pending/valid/rejected), verified_by, verified_at, notes`
 
 ### 5.4 Desain & Produksi
@@ -196,7 +201,7 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 - [ ] Komisi marketing (BR-18) setelah rumus disetujui Owner.
 - [ ] Service FastAPI (webhook WA, LLM, Mini Agent) — notifikasi "pesanan selesai" saat ini hanya dicatat sebagai audit `CUSTOMER_NOTIFICATION_QUEUED_MOCK`.
 - [ ] Redis queue/Horizon & Cloudflare R2 (upload saat ini ke disk lokal **privat**; tinggal arahkan disk ke R2).
-- [x] Test otomatis PHPUnit (12 test) — tambah test untuk setiap fitur backend baru.
+- [x] Test otomatis PHPUnit (19 test) — tambah test untuk setiap fitur backend baru.
 - [x] Git repo + commit pertama.
 - [x] Nomor urut order/SPK dibandingkan sebagai angka (tidak bentrok setelah 999/9999).
 - [ ] Sebelum online: `APP_DEBUG=false`, `DEMO_LOGIN_ENABLED=false`, batasi CORS ke domain frontend, ganti semua password DB, token login jangan di localStorage.
@@ -268,6 +273,54 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-19] — Claude (Claude Code) — Perbaikan: Pembayaran Gagal Saat Melampirkan Bukti
+- **Masalah (laporan pemilik):** catat pembayaran **dengan** bukti bayar gagal, tanpa bukti berhasil.
+- **Penyebab (terbukti):** PHP portable memakai batas bawaan `upload_max_filesize = 2M`, sedangkan aturan aplikasi mengizinkan 5 MB dan foto HP umumnya 2–5 MB. PHP membuang file sebelum sampai ke Laravel → 422 "The proof failed to upload." (direproduksi dengan file 3 MB). Foto QC (Kanban) dan mockup terkena masalah yang sama.
+- **Dikerjakan:**
+  1. `.devtools/php/php.ini`: `upload_max_filesize` 2M → 10M, `post_max_size` 8M → 12M; server API (`php artisan serve`) dijalankan ulang. Ditemukan **dua** instance `artisan serve` aktif (script demo sempat dijalankan dua kali) — keduanya dihentikan, satu dijalankan ulang di jendela "A-Taylor API".
+  2. Frontend: `src/lib/image.ts` — `prepareUpload()` mengompres foto di browser (maks 1920px, JPEG 85%; PDF/GIF/file < 500 KB dikirim apa adanya) lalu menolak dengan pesan jelas bila masih melebihi batas. Dipakai di adapter bukti bayar & foto QC; mockup hanya dicek ukurannya (tanpa kompres agar kualitas desain terjaga).
+  3. Backend: pesan validasi bahasa Indonesia untuk `uploaded`/`max`/tipe file di `StorePaymentRequest`, `MoveStageRequest`, `DesignVersionRequest`.
+- **File diubah:** `.devtools/php/php.ini` (lokal, tidak di-commit), `WEB ATAYLOR/src/lib/image.ts` (baru), `src/core/adapters/api/{api-payment,api-kanban,api-order}.adapter.ts`, `API-ATAYLOR/app/Http/Requests/{StorePaymentRequest,MoveStageRequest,DesignVersionRequest}.php`, `tests/Feature/SequenceAndFilesTest.php`, `AI_GUA.md` (§1).
+- **Verifikasi:**
+  - Sebelum: file 3 MB → 422 "The proof failed to upload.". Sesudah: file 3 MB lolos sampai validasi Laravel; file 6 MB → "Bukti bayar maksimal 5 MB." (diuji dengan nominal sengaja tidak valid agar tidak ada data tercatat).
+  - Chrome (Admin): pesanan uji baru **ORD-2026-012** (Kaos 24 pcs) — catat DP Rp 780.000 dengan foto JPEG 4000×3000 berukuran **6,9 MB** (di atas batas 5 MB) → berhasil, file tersimpan **1,09 MB** setelah dikompres → klik **Validasi** → status Valid.
+  - `JALANKAN-TEST.bat` → 22 passed (181 assertions), termasuk test baru bukti > 5 MB ditolak tanpa membuat pembayaran. `tsc --noEmit` bersih, `npm run build` lulus.
+  - Belum diuji: upload langsung dari kamera HP sungguhan dan format HEIC iPhone (bila browser tidak mengonversi ke JPEG, `createImageBitmap` bisa gagal → file asli dikirim dan ditolak server sebagai tipe tidak valid).
+- **Next Action:** saat deploy, samakan `upload_max_filesize`/`post_max_size` di php.ini server (dan batas body Nginx).
+
+### [2026-10-19] — Claude (Claude Code) — Simulasi Alur Admin, Ekspor Excel Executive, Responsif HP
+- **Dikerjakan:**
+  1. **Simulasi alur admin sampai selesai (UI):** dijalankan penuh di Chrome sebagai Admin — ORD-2026-011 (Jaket Bomber, Pendek M6 L6, Rp 2.640.000): input form → kirim mockup v1 → catat ACC manual → catat DP Rp 1.320.000 → validasi → gerbang SPK hijau → terbitkan SPK-AT-2026-0007 → Kanban maju 4 tahap (Tiba di Gudang dengan unggah foto QC) → status Menunggu Pelunasan → catat & validasi pelunasan → **Selesai**, sisa Rp 0. Tidak ada langkah yang macet; tidak perlu perubahan logika. Dispatch vendor tetap khusus Owner/Manager (BR-27) dan tidak menghalangi Kanban.
+  2. **Ekspor Excel Executive** (`GET /api/v1/executive/export.xlsx`, khusus Owner, periode sama dengan filter): tombol "Unduh Excel" di samping "Unduh CSV". Isi workbook:
+     - **Ringkasan** — KPI periode + "Estimasi Laba" yang merujuk total sheet rincian.
+     - **Rincian & Modal** (sheet yang terbuka pertama) — per item: order, tanggal, pelanggan, status, produk, warna, jenis lengan, ukuran, qty, **Harga Jual / pcs (otomatis)**, subtotal, **Biaya Produksi / pcs (kosong, latar kuning, isi manual, validasi angka ≥ 0)**, lalu rumus Total Biaya Produksi, Laba Kotor, Margin. Baris TOTAL; margin total hanya dari baris yang biayanya sudah diisi. Freeze pane + autofilter. Pesanan dibatalkan tidak disertakan.
+     - **Rekap Pesanan** — per pesanan (seperti CSV + total qty).
+  3. **Responsif HP tanpa mengubah desain desktop:** sidebar menjadi drawer di bawah 1024px (☰ membuka, latar gelap/klik menu menutup); tabel AI Training, Platform (2), Inventory diberi `overflow-x-auto` (sebelumnya terpotong); judul kolom tabel yang bisa digeser tidak terlipat; kolom Kanban tidak memaksa tinggi 420px di HP; padding pratinjau cetak SPK mengecil di HP dan tabel ukuran bisa digeser (cetak A4 tidak berubah).
+  4. **Perbaikan modal:** animasi `fade-in-up`/`.dash-stagger` memakai fill `both` sehingga `transform` tertinggal dan modal `fixed` (rework/foto QC/riwayat Kanban) hanya menutup area konten. Diganti `backwards` — tampilan animasi sama.
+- **File diubah:** `API-ATAYLOR/composer.{json,lock}` (+ `phpoffice/phpspreadsheet` 5.10, tanpa advisory), `app/Services/ExecutiveExcelExport.php` (baru), `app/Http/Controllers/Api/V1/ExecutiveController.php`, `routes/api.php`, `tests/Feature/ExecutiveExcelTest.php` (baru); `WEB ATAYLOR/src/app/(dashboard)/layout.tsx`, `src/components/shell/sidebar.tsx`, `src/app/(dashboard)/executive/page.tsx`, `src/core/repositories/spk.repository.ts`, `src/core/adapters/api/api-spk.adapter.ts`, `src/app/(dashboard)/{ai-training,platform,inventory,production/kanban,production/spk/[id]/print}/page.tsx`, `src/app/globals.css`, `tailwind.config.ts`, `AI_GUA.md` (§1, §3, §4, §8).
+- **Verifikasi:**
+  - `JALANKAN-TEST.bat` → 21 passed (177 assertions). Test baru: workbook punya 3 sheet, J5 harga terisi, L5 kosong, setelah L5 diisi rumus Total Biaya & Laba Kotor benar, ada Lengan Pendek & Panjang, Ringkasan merujuk sheet rincian; Admin ditolak 403.
+  - `tsc --noEmit` bersih; `npm run build` lulus (16 rute). Server `next start` port 3000 dijalankan ulang dengan build baru.
+  - Chrome: alur ORD-2026-011 di atas; Executive sebagai Owner menampilkan tombol Excel; endpoint dipanggil dari halaman → 200, tipe xlsx, 13 KB, header ZIP valid; isi workbook dari data demo dibaca ulang dengan PhpSpreadsheet dan sesuai. **Tombol "Unduh Excel" tidak diklik** (agar tidak menyimpan file ke folder Downloads tanpa izin) dan file belum dibuka di Microsoft Excel/LibreOffice.
+  - Lebar 375px (iframe, karena jendela Chrome tidak bisa di-resize): 15 halaman diperiksa skrip pencari elemen terpotong + screenshot beranda, OMS, form, detail, Kanban, Executive; drawer buka/tutup diuji dengan klik. Tabel AI Training/Platform/Inventory dan pratinjau SPK yang tadinya terpotong sudah diperbaiki, tetapi **belum dicek ulang di browser** setelah perbaikan (hanya lolos build).
+  - Data demo kini berisi tambahan ORD-2026-011 (selesai) + SPK-AT-2026-0007; foto QC uji = `public/logo.png`.
+- **Next Action:** opsional — simpan biaya produksi per produk di database (sekarang hanya di file Excel) agar laba bisa tampil di dashboard.
+
+### [2026-10-19] — Claude (Claude Code) — Rincian Pesanan per Ukuran × Jenis Lengan
+- **Dikerjakan:**
+  1. **Form `/orders/new`:** "Ukuran Pokok" + "Jumlah / Qty" diganti blok varian: pilihan Lengan Pendek/Panjang (`SegmentedControl`), grid S–3XL (`QtyStepper`, bilangan bulat ≥ 0, tombol −/+; 6 kolom desktop, 3 kolom HP), subtotal per blok. Toggle **Custom Lanjutan** (`Switch`) memunculkan "+ Tambah Varian"; jenis lengan tidak bisa dobel (opsi terpakai dinonaktifkan, tombol tambah hilang jika semua terpakai); blok tambahan bisa dihapus, blok pertama tidak; mematikan toggle saat blok tambahan berisi qty meminta konfirmasi inline (bukan `window.confirm`). **Total Qty** read-only dipakai untuk peringatan MOQ (merah), Total, DP minimum, Saldo; tombol Simpan nonaktif jika total 0. Hanya ukuran dengan qty > 0 yang dikirim.
+  2. **Backend:** migrasi baru `2026_10_19_100000_add_sleeve_type_to_order_items` (enum `pendek|panjang`, default `pendek` → baris lama otomatis "pendek"; migrasi lama tidak diubah). **Payload `POST /orders` berubah:** `product_id` & `color` di level pesanan, `items: [{sleeve_type, size, qty}]` (format lama `items.*.product_id/color` tidak diterima lagi). `StoreOrderRequest`: ukuran S/M/L/XL/XXL/3XL, qty integer ≥ 1, sleeve_type valid, kombinasi (lengan, ukuran) ganda ditolak, minimal 1 item. `OrderService`: harga dari `products.base_price`, subtotal = qty × harga, MOQ dicek terhadap total qty. `OrderItemResource` mengembalikan `sleeveType`.
+  3. **Tampilan rincian:** tabel per jenis lengan (kolom S–3XL, jumlah, subtotal) di detail `/orders/[id]` dan di cetak SPK `/production/spk/[id]/print` (helper `src/lib/order-items.ts`). Kanban & daftar SPK kini menampilkan **total** qty (sebelumnya qty baris pertama saja — akan salah untuk pesanan multi-ukuran).
+  4. Seeder: ORD-2026-005 kini berisi 2 jenis lengan (total tetap 120 pcs). Token baru `dash-danger-soft/line/strong` (dipakai juga oleh `<Notice>`).
+- **File diubah:** `API-ATAYLOR/database/migrations/2026_10_19_100000_add_sleeve_type_to_order_items.php` (baru), `app/Models/OrderItem.php`, `app/Http/Requests/StoreOrderRequest.php`, `app/Services/OrderService.php`, `app/Http/Resources/OrderItemResource.php`, `database/seeders/DatabaseSeeder.php`, `tests/Feature/OrderItemsTest.php` (baru), `tests/Feature/{OrderLifecycleTest,SequenceAndFilesTest}.php` (payload baru); `WEB ATAYLOR/src/components/ui/{segmented-control,switch,qty-stepper}.tsx` (baru), `src/lib/order-items.ts` (baru), `src/lib/constants.ts`, `src/core/types/order.types.ts`, `src/components/ui/error-state.tsx`, `tailwind.config.ts`, `src/app/(dashboard)/{orders/new,orders/[id],production/spk,production/spk/[id]/print,production/kanban}/page.tsx`, `AI_GUA.md` (§1, §3, §4, §5, §6).
+- **Verifikasi:**
+  - `JALANKAN-TEST.bat` → 19 passed (160 assertions); 7 test baru: multi-ukuran + 2 jenis lengan (total & total_amount), qty 0/negatif/kosong ditolak, ukuran & jenis lengan tidak valid ditolak, kombinasi ganda ditolak (ukuran sama beda lengan tetap boleh), total < MOQ ditolak (tiap baris < MOQ tapi total ≥ MOQ diterima), harga dari browser diabaikan, baris lama tanpa `sleeve_type` = "pendek".
+  - `tsc --noEmit` bersih; `npm run build` lulus (16 rute).
+  - `php artisan migrate` dijalankan di DB demo `ataylor` (data lama tetap, terisi "pendek"). **Data demo tidak di-reset**, jadi perubahan seeder ORD-2026-005 baru terlihat setelah `RESET-DATA-DEMO.bat`.
+  - Chrome (admin): buat **ORD-2026-010** (Jaket Bomber, Pendek M10 L8 + Panjang L5 = 23 pcs, Rp 5.060.000) lewat form → detail menampilkan 2 baris lengan benar; konfirmasi mematikan toggle muncul & tombol Batal bekerja; opsi lengan terpakai nonaktif dan "+ Tambah Varian" hilang. Pesanan itu lalu dibawa sampai SPK terbit lewat API (mockup, ACC manual, DP, validasi) → cetak SPK menampilkan tabel per lengan, total 23 pcs. ORD-2026-010 + SPK-nya **tertinggal di data demo** (hapus dengan reset bila perlu).
+  - Lebar HP dicek lewat iframe 375px: grid 3 kolom, tanpa scroll horizontal. Catatan: sidebar 250px tidak menyusut otomatis di HP (kondisi shell lama, bukan bagian tugas ini). Dialog cetak tidak dibuka.
+- **Next Action:** shell/sidebar responsif untuk HP; bila nanti satu pesanan perlu >1 produk/warna, payload perlu dikembangkan (saat ini 1 produk + 1 warna per pesanan).
 
 ### [2026-10-18] — Claude (Claude Code) — Daftar Kebutuhan Integrasi WhatsApp & AI
 - **Dikerjakan:** Menambah subbagian **§6 "Kebutuhan Fase 4 — Integrasi WhatsApp & AI"** (dokumentasi saja, belum ada kode): alur WA → FastAPI → Laravel, daftar API eksternal (Meta Cloud API, Gemini 2.5 Flash, Claude Haiku 4.5, R2, VPS/HTTPS, Redis, SMTP), syarat yang harus disiapkan klien (verifikasi Meta, nomor WA, kredensial, template), fungsi FR-CB/FR-MA/FR-AT, komponen yang belum dibangun, komponen biaya, dan urutan kerja. Sumber: SRS v1.0, Arsitektur v2.0, PRD v9.0.

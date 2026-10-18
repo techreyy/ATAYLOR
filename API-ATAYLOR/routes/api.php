@@ -73,6 +73,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:owner')->group(function () {
             Route::get('executive/summary', [ExecutiveController::class, 'summary']);
             Route::get('executive/export.csv', [ExecutiveController::class, 'exportCsv']);
+            Route::get('executive/export.xlsx', [ExecutiveController::class, 'exportXlsx']);
             Route::get('audit-logs', [AuditLogController::class, 'index']);
         });
     });

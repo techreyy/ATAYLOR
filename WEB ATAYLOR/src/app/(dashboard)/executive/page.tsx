@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Download, Printer, Award, Info } from "lucide-react";
+import { Download, FileSpreadsheet, Printer, Award, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ export default function ExecutiveDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<"csv" | "xlsx" | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,15 +50,16 @@ export default function ExecutiveDashboardPage() {
     load();
   }, [load]);
 
-  const handleExportCsv = async () => {
-    setDownloading(true);
+  const handleExport = async (kind: "csv" | "xlsx") => {
+    setDownloading(kind);
     setNotice(null);
     try {
-      await executiveRepository.downloadCsv({ from, to });
+      if (kind === "csv") await executiveRepository.downloadCsv({ from, to });
+      else await executiveRepository.downloadExcel({ from, to });
     } catch (err) {
       setNotice(errorMessage(err));
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   };
 
@@ -108,8 +109,11 @@ export default function ExecutiveDashboardPage() {
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="w-3.5 h-3.5" /> Cetak / PDF
           </Button>
-          <Button variant="primary" size="sm" onClick={handleExportCsv} disabled={downloading}>
-            <Download className="w-3.5 h-3.5" /> {downloading ? "Mengunduh..." : "Unduh CSV"}
+          <Button variant="outline" size="sm" onClick={() => handleExport("csv")} disabled={!!downloading}>
+            <Download className="w-3.5 h-3.5" /> {downloading === "csv" ? "Mengunduh..." : "Unduh CSV"}
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => handleExport("xlsx")} disabled={!!downloading} title="Rekap + kolom kosong biaya produksi untuk diisi manual">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> {downloading === "xlsx" ? "Mengunduh..." : "Unduh Excel"}
           </Button>
         </div>
       </div>

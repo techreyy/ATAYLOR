@@ -22,7 +22,8 @@ class SequenceAndFilesTest extends TestCase
         return [
             'customer_name' => 'Uji Nomor', 'customer_wa' => '0812-5555-6666', 'channel' => 'online',
             'due_date' => now()->addDays(30)->toDateString(),
-            'items' => [['product_id' => $productId, 'color' => 'Putih', 'size' => 'M', 'qty' => 12]],
+            'product_id' => $productId, 'color' => 'Putih',
+            'items' => [['sleeve_type' => 'pendek', 'size' => 'M', 'qty' => 12]],
         ];
     }
 
@@ -63,5 +64,20 @@ class SequenceAndFilesTest extends TestCase
         $tampered = str_replace('/files/tenants/', '/files/tenants/x', $signed);
         $this->assertNotSame($signed, $tampered);
         $this->get($tampered)->assertForbidden(); // path diubah => tanda tangan tidak cocok
+    }
+
+    public function test_oversized_payment_proof_is_rejected_with_clear_message(): void
+    {
+        Storage::fake('local');
+        $orderId = $this->api('admin', 'GET', '/orders')->json('data.0.id');
+        $before = $this->db(fn () => Payment::count());
+
+        $this->api('admin', 'POST', "/orders/{$orderId}/payments", [
+            'method' => 'transfer',
+            'amount' => 1000,
+            'proof' => UploadedFile::fake()->create('bukti.jpg', 6000, 'image/jpeg'),
+        ])->assertStatus(422)->assertJsonPath('errors.proof.0', 'Bukti bayar maksimal 5 MB.');
+
+        $this->assertSame($before, $this->db(fn () => Payment::count()));
     }
 }

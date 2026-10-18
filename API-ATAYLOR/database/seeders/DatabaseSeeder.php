@@ -134,7 +134,10 @@ class DatabaseSeeder extends Seeder
             'customer_name' => 'Panitia Jalan Sehat RT 05 (Contoh)', 'customer_wa' => '0857-0000-3344', 'channel' => 'offline',
             'marketing_closer_id' => $closers[2]->id, 'due_date' => $now->addDays(21)->toDateString(),
             'notes' => 'Sablon logo depan, nomor belakang.',
-        ], [[$p['kaos'], 'Putih', 'L', 120]]);
+        ], [
+            [$p['kaos'], 'Putih', 'M', 40], [$p['kaos'], 'Putih', 'L', 50], [$p['kaos'], 'Putih', 'XL', 10],
+            [$p['kaos'], 'Putih', 'L', 15, 'panjang'], [$p['kaos'], 'Putih', 'XL', 5, 'panjang'],
+        ]);
 
         // 6. Terlambat: tenggat lewat, masih di Antrean
         $this->order('ORD-2026-006', $now->subDays(20), [
@@ -192,11 +195,12 @@ class DatabaseSeeder extends Seeder
             'updated_at' => $createdAt,
         ]);
 
-        foreach ($items as [$product, $color, $size, $qty]) {
+        foreach ($items as $item) {
+            [$product, $color, $size, $qty] = $item;
             $order->items()->create([
                 'product_id' => $product->id,
                 'sku_code' => strtoupper(substr($product->category, 0, 3)).'-'.strtoupper(substr(preg_replace('/\W/', '', $color), 0, 6)),
-                'color' => $color, 'size' => $size, 'qty' => $qty,
+                'color' => $color, 'size' => $size, 'qty' => $qty, 'sleeve_type' => $item[4] ?? 'pendek',
                 'unit_price' => $product->base_price, 'subtotal' => $product->base_price * $qty,
             ]);
         }

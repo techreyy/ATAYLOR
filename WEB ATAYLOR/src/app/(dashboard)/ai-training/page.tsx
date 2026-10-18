@@ -128,7 +128,7 @@ export default function AiTrainingPage() {
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs font-semibold">Katalog Produk yang Diketahui AI</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-dash-line text-zinc-500 uppercase text-[10px] font-semibold">

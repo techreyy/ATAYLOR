@@ -53,3 +53,16 @@ export const ORDER_STATUS_META: Record<string, { label: string; variant: BadgeVa
 export function orderStatusMeta(status: string) {
   return ORDER_STATUS_META[status] ?? { label: status, variant: "slate" as BadgeVariant };
 }
+
+/** Ukuran baku form pesanan — sama dengan `OrderItem::SIZES` di backend. */
+export const ORDER_SIZES = ["S", "M", "L", "XL", "XXL", "3XL"] as const;
+
+/** Jenis lengan — id sama dengan `order_items.sleeve_type`. */
+export const SLEEVE_TYPES = [
+  { id: "pendek", label: "Lengan Pendek" },
+  { id: "panjang", label: "Lengan Panjang" },
+] as const;
+
+export function sleeveLabel(id: string | null | undefined): string {
+  return SLEEVE_TYPES.find((s) => s.id === id)?.label ?? SLEEVE_TYPES[0].label;
+}

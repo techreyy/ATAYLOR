@@ -34,6 +34,11 @@ body {
     outline: none;
   }
 
+  /* Tabel yang bisa digeser (HP): judul kolom tetap satu baris agar tidak terlipat per kata */
+  .overflow-x-auto > table th {
+    white-space: nowrap;
+  }
+
   /* Scrollbar tipis */
   * {
     scrollbar-width: thin;
@@ -49,7 +54,7 @@ body {
 
 /* Isi halaman muncul berurutan (stagger) */
 .dash-stagger > * {
-  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .dash-stagger > *:nth-child(2) { animation-delay: 0.04s; }
 .dash-stagger > *:nth-child(3) { animation-delay: 0.08s; }

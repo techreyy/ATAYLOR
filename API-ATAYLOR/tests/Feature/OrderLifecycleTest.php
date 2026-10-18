@@ -36,7 +36,8 @@ class OrderLifecycleTest extends TestCase
             'channel' => 'offline',
             'marketing_closer_id' => $this->closerId(),
             'due_date' => now()->addDays(30)->toDateString(),
-            'items' => [['product_id' => $this->poloId(), 'color' => 'Hitam', 'size' => 'L', 'qty' => 20]],
+            'product_id' => $this->poloId(), 'color' => 'Hitam',
+            'items' => [['sleeve_type' => 'pendek', 'size' => 'L', 'qty' => 20]],
         ], $overrides))->assertCreated()->json('data');
     }
 
@@ -63,7 +64,8 @@ class OrderLifecycleTest extends TestCase
         $this->api('admin', 'POST', '/orders', [
             'customer_name' => 'Tanpa Closer', 'customer_wa' => '0812-1111-2222', 'channel' => 'offline',
             'due_date' => now()->addDays(30)->toDateString(),
-            'items' => [['product_id' => $this->poloId(), 'color' => 'Merah', 'size' => 'L', 'qty' => 20]],
+            'product_id' => $this->poloId(), 'color' => 'Merah',
+            'items' => [['sleeve_type' => 'pendek', 'size' => 'L', 'qty' => 20]],
         ])->assertStatus(422)->assertJsonPath('code', 'BR-02');
     }
 
@@ -72,7 +74,8 @@ class OrderLifecycleTest extends TestCase
         $this->api('admin', 'POST', '/orders', [
             'customer_name' => 'Uji MOQ', 'customer_wa' => '0812-1111-2222', 'channel' => 'online',
             'due_date' => now()->addDays(30)->toDateString(),
-            'items' => [['product_id' => $this->poloId(), 'color' => 'Merah', 'size' => 'L', 'qty' => 2]],
+            'product_id' => $this->poloId(), 'color' => 'Merah',
+            'items' => [['sleeve_type' => 'pendek', 'size' => 'L', 'qty' => 2]],
         ])->assertStatus(422)->assertJsonPath('code', 'MOQ');
     }
 

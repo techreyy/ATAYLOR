@@ -16,4 +16,13 @@ class MoveStageRequest extends FormRequest
             'qc_photo' => ['nullable', 'image', 'max:8192'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'qc_photo.uploaded' => 'Foto QC gagal diunggah. Pastikan ukurannya maksimal 8 MB.',
+            'qc_photo.max' => 'Foto QC maksimal 8 MB.',
+            'qc_photo.image' => 'Foto QC harus berupa gambar (JPG/PNG/WEBP).',
+        ];
+    }
 }

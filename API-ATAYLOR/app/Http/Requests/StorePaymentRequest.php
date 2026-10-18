@@ -16,4 +16,14 @@ class StorePaymentRequest extends FormRequest
             'proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
         ];
     }
+
+    public function messages(): array
+    {
+        // "uploaded" = file ditolak PHP (melebihi upload_max_filesize) sebelum sampai ke aturan lain
+        return [
+            'proof.uploaded' => 'Bukti bayar gagal diunggah. Pastikan ukurannya maksimal 5 MB.',
+            'proof.max' => 'Bukti bayar maksimal 5 MB.',
+            'proof.mimes' => 'Bukti bayar harus berupa foto JPG, PNG, WEBP, atau PDF.',
+        ];
+    }
 }

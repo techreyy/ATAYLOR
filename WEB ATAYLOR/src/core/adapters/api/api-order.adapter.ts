@@ -1,6 +1,7 @@
 import { apiFetch } from "@/core/api/client";
 import type { CatalogProductOption, CloserOption, IOrderRepository } from "@/core/repositories/order.repository";
 import type { CreateOrderInput, Order, OrderFilters, SpkGate } from "@/core/types/order.types";
+import { UPLOAD_LIMITS_MB, prepareUpload } from "@/lib/image";
 
 class ApiOrderAdapter implements IOrderRepository {
   async getAllOrders(filters: OrderFilters = {}) {
@@ -28,7 +29,8 @@ class ApiOrderAdapter implements IOrderRepository {
 
   async sendDesignVersion(orderId: string, mockup?: File | null) {
     const form = new FormData();
-    if (mockup) form.append("mockup", mockup);
+    // Mockup tidak dikompres agar kualitas desain terjaga; hanya dicek ukurannya
+    if (mockup) form.append("mockup", await prepareUpload(mockup, UPLOAD_LIMITS_MB.mockup, "File mockup", false));
     return apiFetch<{ message: string; isPaidRevision: boolean }>(`/orders/${orderId}/design-versions`, {
       method: "POST",
       body: form,

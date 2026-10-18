@@ -69,33 +69,31 @@ class OrderService
             }
         }
 
-        $products = Product::whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
+        $product = Product::find($data['product_id']);
+        if (! $product || ! $product->is_active) {
+            throw new BusinessRuleException('BR-20', 'Produk tidak ditemukan di katalog aktif.');
+        }
 
-        $items = collect($data['items'])->map(function (array $item) use ($products) {
-            $product = $products->get($item['product_id']);
-            if (! $product || ! $product->is_active) {
-                throw new BusinessRuleException('BR-20', 'Produk tidak ditemukan di katalog aktif.');
-            }
-            if ($item['qty'] < $product->moq) {
-                throw new BusinessRuleException('MOQ', "Kuantitas minimal (MOQ) {$product->name} adalah {$product->moq} pcs.");
-            }
+        // MOQ berlaku untuk total qty semua ukuran & jenis lengan
+        $totalQty = (int) collect($data['items'])->sum('qty');
+        if ($totalQty < $product->moq) {
+            throw new BusinessRuleException('MOQ', "Kuantitas minimal (MOQ) {$product->name} adalah {$product->moq} pcs (total saat ini {$totalQty} pcs).");
+        }
 
-            return [
-                'product_id' => $product->id,
-                'sku_code' => $item['sku_code'] ?? null,
-                'color' => $item['color'],
-                'size' => $item['size'],
-                'qty' => $item['qty'],
-                'unit_price' => $product->base_price,
-                'subtotal' => $product->base_price * $item['qty'],
-                '_product' => $product,
-            ];
-        });
+        // Harga satuan selalu dari katalog server, bukan dari browser
+        $items = collect($data['items'])->map(fn (array $item) => [
+            'product_id' => $product->id,
+            'color' => $data['color'],
+            'sleeve_type' => $item['sleeve_type'],
+            'size' => $item['size'],
+            'qty' => $item['qty'],
+            'unit_price' => $product->base_price,
+            'subtotal' => $product->base_price * $item['qty'],
+        ]);
 
         $total = (int) $items->sum('subtotal');
-        $dpPercent = (int) $items->max(fn ($i) => $i['_product']->dp_min_percent);
-        $dpRequired = (int) ceil($total * $dpPercent / 100);
-        $slaHours = (int) $items->max(fn ($i) => $i['_product']->design_sla_hours);
+        $dpRequired = (int) ceil($total * $product->dp_min_percent / 100);
+        $slaHours = (int) $product->design_sla_hours;
 
         return DB::transaction(function () use ($data, $actor, $items, $total, $dpRequired, $slaHours) {
             $order = Order::create([
@@ -116,7 +114,6 @@ class OrderService
             ]);
 
             foreach ($items as $item) {
-                unset($item['_product']);
                 $order->items()->create($item);
             }
 

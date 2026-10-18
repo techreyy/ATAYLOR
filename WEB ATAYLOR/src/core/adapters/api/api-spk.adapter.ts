@@ -33,6 +33,10 @@ class ApiExecutiveAdapter implements IExecutiveRepository {
   async downloadCsv(period: { from?: string; to?: string }) {
     await apiDownload("/executive/export.csv", `rekap-penjualan-${period.from}_${period.to}.csv`, period);
   }
+
+  async downloadExcel(period: { from?: string; to?: string }) {
+    await apiDownload("/executive/export.xlsx", `rekap-penjualan-modal-${period.from}_${period.to}.xlsx`, period);
+  }
 }
 
 export const spkRepository: ISpkRepository = new ApiSpkAdapter();

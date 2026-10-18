@@ -301,7 +301,7 @@ export default function SpkDispatchPage() {
                       <p className="text-[11px] text-zinc-500">{spk.order?.customerName}</p>
                     </td>
                     <td className="py-2.5 px-3 text-zinc-700">
-                      {item ? `${item.productName} (${item.color}) — ${item.qty} pcs` : "-"}
+                      {item ? `${item.productName} (${item.color}) — ${spk.order?.items.reduce((sum, i) => sum + i.qty, 0)} pcs` : "-"}
                     </td>
                     <td className="py-2.5 px-3">
                       {spk.dispatchedAt ? (

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { spkRepository } from "@/core/adapters/api/api-spk.adapter";
 import { SpkDocument } from "@/core/types/production.types";
+import { groupBySleeve, sizeColumns } from "@/lib/order-items";
 
 export default function SpkPrintPage() {
   const params = useParams();
@@ -29,10 +30,13 @@ export default function SpkPrintPage() {
   }
 
   const order = spk.order;
+  // Rincian per jenis lengan × ukuran untuk vendor jahit
+  const sleeveGroups = groupBySleeve(order.items);
+  const sizes = sizeColumns(order.items);
   const totalQty = order.items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
-    <div className="min-h-screen bg-white p-6 md:p-10 max-w-4xl mx-auto text-zinc-900 font-sans print:p-0">
+    <div className="min-h-screen bg-white p-2 sm:p-6 md:p-10 max-w-4xl mx-auto text-zinc-900 font-sans print:p-0">
       {/* Action Bar for On-screen preview only */}
       <div className="mb-6 p-3 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-between print:hidden">
         <div>
@@ -50,7 +54,7 @@ export default function SpkPrintPage() {
       </div>
 
       {/* Official A4 SPK Sheet */}
-      <div className="border border-zinc-300 p-8 rounded-lg print:border-none print:p-0">
+      <div className="border border-zinc-300 p-4 sm:p-8 rounded-lg print:border-none print:p-0">
         {/* Document Header */}
         <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-4 mb-6">
           <div className="flex items-center gap-3">
@@ -122,39 +126,55 @@ export default function SpkPrintPage() {
           <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 mb-2">
             Rincian Spesifikasi Produksi
           </h3>
-          <table className="w-full text-left text-xs border border-zinc-300">
-            <thead>
-              <tr className="bg-zinc-100 border-b border-zinc-300 font-bold text-zinc-700">
-                <th className="py-2 px-3 border-r border-zinc-300">No</th>
-                <th className="py-2 px-3 border-r border-zinc-300">Item Produk & Deskripsi Bahan</th>
-                <th className="py-2 px-3 border-r border-zinc-300">Warna / Corak</th>
-                <th className="py-2 px-3 border-r border-zinc-300">Ukuran</th>
-                <th className="py-2 px-3 text-right">Kuantitas</th>
-              </tr>
-            </thead>
+          <table className="w-full text-left text-xs border border-zinc-300 mb-2">
             <tbody>
-              {order.items.map((item, index) => (
-                <tr key={item.id} className="border-b border-zinc-200">
-                  <td className="py-2 px-3 border-r border-zinc-200 text-center font-mono tabular-nums">{index + 1}</td>
-                  <td className="py-2 px-3 border-r border-zinc-200 font-semibold">
-                    {item.productName}
-                    <p className="text-[10px] text-zinc-500 font-normal">{order.notes}</p>
-                  </td>
-                  <td className="py-2 px-3 border-r border-zinc-200">{item.color}</td>
-                  <td className="py-2 px-3 border-r border-zinc-200 font-mono font-bold">{item.size}</td>
-                  <td className="py-2 px-3 text-right font-mono font-bold tabular-nums">{item.qty} Pcs</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-zinc-50 font-bold">
-                <td colSpan={4} className="py-2 px-3 text-right border-r border-zinc-300">
-                  TOTAL KUANTITAS:
+              <tr className="border-b border-zinc-200">
+                <th className="py-2 px-3 w-48 bg-zinc-100 border-r border-zinc-300 font-bold text-zinc-700">Item Produk & Bahan</th>
+                <td className="py-2 px-3 font-semibold">
+                  {[...new Set(order.items.map((i) => i.productName))].join(", ")}
+                  {order.notes && <p className="text-[10px] text-zinc-500 font-normal">{order.notes}</p>}
                 </td>
-                <td className="py-2 px-3 text-right font-mono tabular-nums">{totalQty} Pcs</td>
               </tr>
-            </tfoot>
+              <tr>
+                <th className="py-2 px-3 bg-zinc-100 border-r border-zinc-300 font-bold text-zinc-700">Warna / Corak</th>
+                <td className="py-2 px-3">{[...new Set(order.items.map((i) => i.color))].join(", ")}</td>
+              </tr>
+            </tbody>
           </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border border-zinc-300">
+              <thead>
+                <tr className="bg-zinc-100 border-b border-zinc-300 font-bold text-zinc-700">
+                  <th className="py-2 px-3 border-r border-zinc-300">Jenis Lengan</th>
+                  {sizes.map((s) => (
+                    <th key={s} className="py-2 px-2 border-r border-zinc-300 text-center font-mono">{s}</th>
+                  ))}
+                  <th className="py-2 px-3 text-right">Jumlah</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sleeveGroups.map((g) => (
+                  <tr key={g.sleeveType} className="border-b border-zinc-200">
+                    <td className="py-2 px-3 border-r border-zinc-200 font-bold whitespace-nowrap">{g.label}</td>
+                    {g.sizes.map((s) => (
+                      <td key={s.size} className={`py-2 px-2 border-r border-zinc-200 text-center font-mono tabular-nums ${s.qty ? "font-bold" : "text-zinc-400"}`}>
+                        {s.qty}
+                      </td>
+                    ))}
+                    <td className="py-2 px-3 text-right font-mono font-bold tabular-nums whitespace-nowrap">{g.totalQty} Pcs</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-zinc-50 font-bold">
+                  <td colSpan={sizes.length + 1} className="py-2 px-3 text-right border-r border-zinc-300">
+                    TOTAL KUANTITAS:
+                  </td>
+                  <td className="py-2 px-3 text-right font-mono tabular-nums">{totalQty} Pcs</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
 
         {/* Dispatch Metadata Section (BR-27) */}

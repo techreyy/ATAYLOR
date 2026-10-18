@@ -128,7 +128,7 @@ export default function KanbanPage() {
         {KANBAN_STAGES.map((stage, idx) => {
           const ordersInStage = stageOrders[stage.id] || [];
           return (
-            <div key={stage.id} className="flex flex-col bg-white/70 rounded-card border border-white p-2.5 min-h-[420px]">
+            <div key={stage.id} className="flex flex-col bg-white/70 rounded-card border border-white p-2.5 md:min-h-[420px]">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-200 mb-2">
                 <div className="flex items-center gap-1.5">
                   <span className="w-4 h-4 rounded bg-dash-primary text-dash-ink text-[10px] flex items-center justify-center font-mono font-bold tabular-nums">
@@ -161,7 +161,7 @@ export default function KanbanPage() {
 
                         <h5 className="font-semibold text-xs text-zinc-900 line-clamp-1">{order.customerName}</h5>
                         <p className="text-[11px] text-zinc-500 mt-0.5">
-                          {order.items[0]?.productName} ({order.items[0]?.qty} pcs)
+                          {order.items[0]?.productName} (<span className="tabular-nums">{order.items.reduce((sum, i) => sum + i.qty, 0)}</span> pcs)
                         </p>
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {late && (

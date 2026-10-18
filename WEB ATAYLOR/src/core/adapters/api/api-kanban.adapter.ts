@@ -3,6 +3,7 @@ import type { IKanbanRepository } from "@/core/repositories/kanban.repository";
 import type { Order } from "@/core/types/order.types";
 import type { WipHistory } from "@/core/types/production.types";
 import type { KanbanStageId } from "@/lib/constants";
+import { UPLOAD_LIMITS_MB, prepareUpload } from "@/lib/image";
 
 class ApiKanbanAdapter implements IKanbanRepository {
   async getOrdersByStage() {
@@ -13,7 +14,7 @@ class ApiKanbanAdapter implements IKanbanRepository {
     const form = new FormData();
     form.append("target_stage", params.targetStage);
     if (params.reasonNote) form.append("reason_note", params.reasonNote);
-    if (params.qcPhoto) form.append("qc_photo", params.qcPhoto);
+    if (params.qcPhoto) form.append("qc_photo", await prepareUpload(params.qcPhoto, UPLOAD_LIMITS_MB.qcPhoto, "Foto QC"));
     return (await apiFetch<{ data: Order }>(`/orders/${params.orderId}/move-stage`, { method: "POST", body: form })).data;
   }
 

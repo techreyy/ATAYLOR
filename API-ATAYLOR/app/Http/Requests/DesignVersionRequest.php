@@ -12,4 +12,13 @@ class DesignVersionRequest extends FormRequest
             'mockup' => ['nullable', 'image', 'max:8192'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'mockup.uploaded' => 'File mockup gagal diunggah. Pastikan ukurannya maksimal 8 MB.',
+            'mockup.max' => 'File mockup maksimal 8 MB.',
+            'mockup.image' => 'File mockup harus berupa gambar (JPG/PNG/WEBP).',
+        ];
+    }
 }

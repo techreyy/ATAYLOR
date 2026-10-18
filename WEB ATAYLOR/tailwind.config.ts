@@ -33,6 +33,10 @@ const config: Config = {
           success: "#57B657",
           warning: "#FFC100",
           danger: "#FF4747",
+          // Peringatan merah lembut (sama dengan <Notice tone="error">)
+          "danger-soft": "#FFECEC",
+          "danger-line": "#FFD3D3",
+          "danger-strong": "#C62F2F",
           info: "#248AFD",
         },
         cobalt: {
@@ -81,7 +85,8 @@ const config: Config = {
       },
       animation: {
         "fade-in": "fade-in 0.25s ease-out both",
-        "fade-in-up": "fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
+        // backwards: transform tidak tertinggal setelah animasi, agar modal `fixed` di dalam halaman tetap menutup layar penuh
+        "fade-in-up": "fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards",
         "scale-in": "scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both",
         "slide-down": "slide-down 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
         shimmer: "shimmer 1.4s linear infinite",

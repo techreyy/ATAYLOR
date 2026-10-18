@@ -4,6 +4,8 @@ import type { SpkDocument, WipHistory } from "./production.types";
 
 export type OrderChannel = "online" | "offline";
 
+export type SleeveType = "pendek" | "panjang";
+
 export type OrderStatus =
   | "brief_lengkap"
   | "desain_dikerjakan"
@@ -29,6 +31,7 @@ export interface OrderItem {
   productName?: string;
   skuCode?: string | null;
   color: string;
+  sleeveType: SleeveType;
   size: string;
   qty: number;
   unitPrice: number;
@@ -99,7 +102,10 @@ export interface CreateOrderInput {
   marketing_closer_id?: string | null;
   due_date: string;
   notes?: string;
-  items: { product_id: string; color: string; size: string; qty: number }[];
+  product_id: string;
+  color: string;
+  // Hanya ukuran dengan qty > 0; harga dihitung server dari katalog
+  items: { sleeve_type: SleeveType; size: string; qty: number }[];
 }
 
 export interface OrderFilters {

@@ -90,7 +90,7 @@ export default function PlatformPage() {
               <Users className="w-4 h-4 text-blue-600" /> Pengguna Terdaftar (5 Role RBAC)
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 text-[10px] uppercase font-semibold">
@@ -131,7 +131,7 @@ export default function PlatformPage() {
             <History className="w-4 h-4 text-zinc-500" /> Log Aktivitas Audit Sensitif (`audit_logs`)
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase text-[10px] font-semibold">

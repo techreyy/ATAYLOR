@@ -16,10 +16,28 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, ready } = useRole();
   const [collapsed, setCollapsed] = useState(false);
+  // Di bawah lg (1024px) sidebar menjadi drawer yang menutupi konten
+  const [isDesktop, setIsDesktop] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (ready && !user) router.replace("/login");
   }, [ready, user, router]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setIsDesktop(mq.matches);
+      if (mq.matches) setMobileOpen(false);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     try {
@@ -30,6 +48,10 @@ export default function DashboardLayout({
   }, []);
 
   const toggleSidebar = () => {
+    if (!isDesktop) {
+      setMobileOpen((o) => !o);
+      return;
+    }
     setCollapsed((c) => {
       try {
         localStorage.setItem("ataylor_sidebar_collapsed", c ? "0" : "1");
@@ -53,7 +75,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-dash-bg">
-      <Sidebar collapsed={collapsed} />
+      <Sidebar collapsed={collapsed && isDesktop} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar onToggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-y-auto p-4 md:p-7">

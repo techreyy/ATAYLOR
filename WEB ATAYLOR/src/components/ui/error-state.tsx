@@ -28,7 +28,7 @@ export function ErrorState({ error, onRetry, className }: ErrorStateProps) {
       <div
         className={cn(
           "w-11 h-11 rounded-full border flex items-center justify-center mb-3",
-          forbidden ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-[#FFECEC] border-[#FFD3D3] text-[#C62F2F]"
+          forbidden ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-dash-danger-soft border-dash-danger-line text-dash-danger-strong"
         )}
       >
         <Icon className="w-5 h-5" />
@@ -62,7 +62,7 @@ export function Notice({
     <div
       className={cn(
         "p-3.5 rounded-xl border text-xs flex items-start justify-between gap-3 animate-slide-down",
-        tone === "success" ? "bg-[#E8F6E8] border-[#CDEBCD] text-[#2F7A2F]" : "bg-[#FFECEC] border-[#FFD3D3] text-[#C62F2F]"
+        tone === "success" ? "bg-[#E8F6E8] border-[#CDEBCD] text-[#2F7A2F]" : "bg-dash-danger-soft border-dash-danger-line text-dash-danger-strong"
       )}
       role={tone === "error" ? "alert" : "status"}
     >
