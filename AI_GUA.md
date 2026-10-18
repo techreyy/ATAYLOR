@@ -276,6 +276,13 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
 
+### [2026-10-19] — Claude (Claude Code) — Perbaikan: Sesi Antar-Tab Tidak Sinkron
+- **Masalah:** token login disimpan di `localStorage` yang dipakai bersama semua tab. Login/ganti peran/keluar di satu tab mengganti token untuk semua tab, tetapi tab lain tetap menampilkan nama & peran lama → aksi ditolak 403 ("Diizinkan: owner") padahal sidebar menulis Owner.
+- **Dikerjakan:** `role-context.tsx` mendengarkan event `storage` (hanya dipicu dari tab lain): token berganti → muat ulang `/auth/me` dan perbarui user (halaman ikut dimuat ulang karena `key` layout memakai `user.id`); token dihapus → user dikosongkan sehingga layout mengarahkan ke `/login`. Sakelar "Kirim WhatsApp Otomatis" ikut disinkronkan antar-tab. `TOKEN_KEY` diekspor dari `src/core/api/client.ts`.
+- **File diubah:** `WEB ATAYLOR/src/components/shell/role-context.tsx`, `src/core/api/client.ts`, `AI_GUA.md`.
+- **Verifikasi:** `tsc --noEmit` bersih; `npm run build` lulus; server 3000 dijalankan ulang. Chrome dua tab: tab B ganti peran Owner → Admin lewat menu "Masuk sebagai" → tab A (Kanban) langsung menampilkan "Budi Santoso · Admin Sentral" tanpa reload; dikembalikan ke Owner → tab A ikut "H. Ahmad Fauzi · Owner". Jalur "keluar di tab lain → tab ini ke /login" **tidak** diuji di browser (agar sesi pemilik tidak dicabut); hanya diperiksa lewat kode.
+- **Catatan:** ini memperbaiki tampilan basi; penyimpanan token di `localStorage` tetap harus diganti cookie httpOnly sebelum online (§6).
+
 ### [2026-10-19] — Claude (Claude Code) — Katalog AI Training Nyata (Owner) & Panel "Yang Dipelajari AI dari Pesanan"
 - **Keputusan pemilik:** katalog bisa diedit **khusus Owner**; pesanan input manual juga harus "dipelajari" AI; panel dikerjakan sekalian; persona/batas diskon belum.
 - **Dikerjakan:**

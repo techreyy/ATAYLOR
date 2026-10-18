@@ -2,7 +2,9 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { UserRole } from "@/lib/constants";
-import { apiFetch, tokenStore } from "@/core/api/client";
+import { apiFetch, TOKEN_KEY, tokenStore } from "@/core/api/client";
+
+const AUTOMATION_KEY = "ataylor_automation_mode";
 
 export interface SessionUser {
   id: string;
@@ -38,7 +40,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const savedMode = localStorage.getItem("ataylor_automation_mode") as "high_on" | "low_off" | null;
+      const savedMode = localStorage.getItem(AUTOMATION_KEY) as "high_on" | "low_off" | null;
       if (savedMode) setAutomationMode(savedMode);
     } catch {
       /* abaikan */
@@ -52,6 +54,27 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       .then((res) => setUser(res.user))
       .catch(() => tokenStore.set(null))
       .finally(() => setReady(true));
+  }, []);
+
+  // Token disimpan bersama oleh semua tab: bila tab lain login/ganti peran/keluar,
+  // tab ini ikut memperbarui sesinya agar tampilan tidak basi (event `storage` hanya datang dari tab lain).
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === TOKEN_KEY || e.key === null) {
+        if (!tokenStore.get()) {
+          setUser(null); // layout dashboard mengarahkan ke /login
+          return;
+        }
+        apiFetch<{ user: SessionUser }>("/auth/me")
+          .then((res) => setUser(res.user))
+          .catch(() => setUser(null));
+      }
+      if (e.key === AUTOMATION_KEY && (e.newValue === "high_on" || e.newValue === "low_off")) {
+        setAutomationMode(e.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const applyAuth = (res: AuthResponse) => {
@@ -83,7 +106,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     const next = automationMode === "high_on" ? "low_off" : "high_on";
     setAutomationMode(next);
     try {
-      localStorage.setItem("ataylor_automation_mode", next);
+      localStorage.setItem(AUTOMATION_KEY, next);
     } catch {
       /* abaikan */
     }
