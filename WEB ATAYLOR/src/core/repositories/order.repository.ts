@@ -11,6 +11,8 @@ export interface CatalogProductOption {
   designSlaHours: number;
   dpMinPercent: number;
   freeRevisionLimit: number;
+  isActive?: boolean;
+  updatedAt?: string | null;
 }
 
 export interface CloserOption {

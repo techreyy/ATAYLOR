@@ -18,6 +18,8 @@ abstract class TestCase extends BaseTestCase
     {
         $token = $this->tokens[$role] ??= $this->issueToken($role);
         $this->app['auth']->forgetGuards(); // jangan bawa user dari request sebelumnya
+        // ...maupun tenant RLS-nya: tiap request nyata dimulai tanpa konteks tenant
+        app(TenantContext::class)->set(null);
 
         return $this->withToken($token)->json($method, '/api/v1'.$uri, $data);
     }

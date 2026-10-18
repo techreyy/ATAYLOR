@@ -3,28 +3,23 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Models\MarketingCloser;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MasterDataController extends Controller
 {
-    public function products(): JsonResponse
+    /** Produk aktif untuk form pesanan; Owner dapat meminta semua (termasuk nonaktif) untuk katalog. */
+    public function products(Request $request): AnonymousResourceCollection
     {
-        $products = Product::where('is_active', true)->orderBy('name')->get()->map(fn (Product $p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-            'category' => $p->category,
-            'basePrice' => $p->base_price,
-            'moq' => $p->moq,
-            'stdDurationDays' => $p->std_duration_days,
-            'dailyCapacity' => $p->daily_capacity,
-            'designSlaHours' => $p->design_sla_hours,
-            'dpMinPercent' => $p->dp_min_percent,
-            'freeRevisionLimit' => $p->free_revision_limit,
-        ]);
+        $all = $request->boolean('include_inactive') && $request->user()->role === 'owner';
 
-        return response()->json(['data' => $products]);
+        return ProductResource::collection(
+            Product::when(! $all, fn ($q) => $q->where('is_active', true))->orderBy('name')->get()
+        );
     }
 
     public function closers(): JsonResponse

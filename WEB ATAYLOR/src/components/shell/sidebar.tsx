@@ -49,7 +49,7 @@ const NAV_ITEMS: NavItem[] = [
   { name: "Inventory Gudang", href: "/inventory", icon: Boxes, section: "Analitik & Desain", mock: true },
 
   // 9. AI Training
-  { name: "AI Training & Katalog", href: "/ai-training", icon: Cpu, section: "AI & Konfigurasi", mock: true },
+  { name: "AI Training & Katalog", href: "/ai-training", icon: Cpu, section: "AI & Konfigurasi" },
   // 10. Chatbot Playground
   { name: "Chatbot & Mini Agent", href: "/agent-playground", icon: BotMessageSquare, section: "AI & Konfigurasi", mock: true },
   // 11. Platform
