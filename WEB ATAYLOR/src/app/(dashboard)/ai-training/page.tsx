@@ -1,14 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { RefreshCw, CheckCircle2, Sparkles, Database, X } from "lucide-react";
+import { RefreshCw, CheckCircle2, Sparkles, Database, X, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
+import { Switch } from "@/components/ui/switch";
+import { useRole } from "@/components/shell/role-context";
 import { SEED_PRODUCTS } from "@/core/seeds/seed-data";
 import { formatRupiah } from "@/lib/currency";
 
 export default function AiTrainingPage() {
+  const { activeRole, automationMode, toggleAutomationMode } = useRole();
+  const isOwner = activeRole === "owner";
   const [tone, setTone] = useState("Ramah, profesional, bernuansa konveksi lokal Kendari");
   const [negMaxDiscount, setNegMaxDiscount] = useState(5);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -53,6 +57,42 @@ export default function AiTrainingPage() {
           </button>
         </div>
       )}
+
+      {/* Sakelar High/Low Season (BR-21) — keputusan Owner */}
+      <Card>
+        <CardHeader className="px-5 pt-4 pb-1">
+          <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+            <MessageCircle className="w-3.5 h-3.5 text-zinc-600" /> Kirim WhatsApp Otomatis
+          </CardTitle>
+          <DemoMockBadge />
+        </CardHeader>
+        <CardContent className="p-4 space-y-3 text-xs">
+          <Switch
+            checked={automationMode === "high_on"}
+            onChange={toggleAutomationMode}
+            disabled={!isOwner}
+            label={automationMode === "high_on" ? "Aktif" : "Nonaktif"}
+            description={isOwner ? "Pilih sesuai kondisi toko saat ini." : "Hanya Owner yang dapat mengubah pengaturan ini."}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className={`rounded-lg border p-3 ${automationMode === "high_on" ? "border-dash-primary bg-dash-primary-soft/50" : "border-dash-line"}`}>
+              <p className="font-semibold text-dash-text mb-1">Aktif — saat pesanan ramai</p>
+              <p className="text-dash-muted leading-relaxed">
+                Sistem mengirim mockup beserta tombol ACC/Revisi, pengingat ACC, instruksi pembayaran, dan kabar pesanan selesai ke pelanggan.
+              </p>
+            </div>
+            <div className={`rounded-lg border p-3 ${automationMode === "low_off" ? "border-dash-primary bg-dash-primary-soft/50" : "border-dash-line"}`}>
+              <p className="font-semibold text-dash-text mb-1">Nonaktif — saat sepi atau ingin kendali manual</p>
+              <p className="text-dash-muted leading-relaxed">
+                Tidak ada pesan otomatis. Pesanan dan tiket desain tetap tercatat; Admin mengirim WhatsApp sendiri dan mencatat bukti ACC.
+              </p>
+            </div>
+          </div>
+          <p className="text-[11px] text-dash-muted">
+            Belum tersambung ke WhatsApp — pilihan ini baru tersimpan di browser ini dan belum mengirim pesan apa pun.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Persona & Guardrails */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

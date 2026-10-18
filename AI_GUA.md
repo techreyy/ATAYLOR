@@ -102,7 +102,8 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 ### 3.3 Bentuk & Layout
 - **Kartu:** `rounded-card` (20px), tanpa border, `shadow-card`, naik ke `shadow-card-hover` saat hover. Header kartu `px-5 pt-4/5`, judul tebal 15px.
 - **Sidebar:** putih (lebar 250px, bisa diciutkan ke 78px lewat tombol ☰ di navbar, tersimpan di localStorage; **di bawah 1024px menjadi drawer** yang digeser masuk dari kiri dengan latar gelap, tertutup otomatis saat pindah halaman), menu aktif/hover = latar emas `dash-primary` teks `dash-ink` `rounded-lg`, label seksi huruf kapital abu.
-- **Navbar:** putih tinggi 64px dengan `shadow-navbar`, pil Otomasi & Role `rounded-full`.
+- **Navbar:** putih tinggi 64px dengan `shadow-navbar`: tombol ☰, breadcrumb, lonceng notifikasi. **Tanpa** pil Otomasi / Role (dihapus 19 Okt 2026 atas permintaan pemilik — terlihat seperti pajangan dan menggandakan info sidebar).
+- **Profil (atas sidebar):** satu baris ringkas — inisial, nama, nama peran; klik membuka menu "Keluar". Menu "Masuk sebagai" (ganti peran demo, badge `MOCK`) hanya tampil bila `NEXT_PUBLIC_DEMO_MODE=true` di `.env.local`; matikan saat online. Jangan pakai istilah teknis seperti "Aktor RBAC" di UI.
 - **Tombol:** primer emas teks gelap `rounded-lg`, efek angkat 1px + `shadow-primary` (bayangan emas) saat hover; `outline` = putih dengan hover emas lembut.
 - **Input:** `rounded-lg border-dash-line`; fokus global (globals.css) = border emas + ring emas 3px.
 - **Logo** A-Taylor berlatar hitam → selalu ditaruh di kotak gelap `bg-[#111] rounded-xl`.
@@ -196,7 +197,7 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 
 ### Fase 3 — Berikutnya (belum dikerjakan)
 - [ ] Sambungkan modul MOCK ke backend: CRM Designer board, Inventory (tabel sudah ada), AI Training (CRUD produk), Platform (user, tenant, viewer `audit_logs` — endpoint `GET /audit-logs` sudah ada).
-- [ ] Sakelar High/Low Season (BR-21) simpan ke `tenants.automation_mode` (sekarang masih localStorage).
+- [ ] Sakelar High/Low Season (BR-21) simpan ke `tenants.automation_mode` (sekarang masih localStorage). UI-nya: kartu "Kirim WhatsApp Otomatis" di `/ai-training`, hanya Owner yang bisa mengubah; halaman Chatbot hanya menampilkan status.
 - [ ] Verifikasi kapasitas harian & stok sebelum slot lock (BR-03, BR-15, BR-16) — belum ada tabel kapasitas.
 - [ ] Komisi marketing (BR-18) setelah rumus disetujui Owner.
 - [ ] Service FastAPI (webhook WA, LLM, Mini Agent) — notifikasi "pesanan selesai" saat ini hanya dicatat sebagai audit `CUSTOMER_NOTIFICATION_QUEUED_MOCK`.
@@ -273,6 +274,16 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-19] — Claude (Claude Code) — Profil Sidebar Ringkas & Sakelar Otomasi Pindah ke Owner
+- **Dikerjakan (keputusan pemilik: opsi A):**
+  1. **Navbar:** pil "Otomasi: High/Low Season" dan pil "Role" dihapus; tersisa ☰, breadcrumb, lonceng.
+  2. **Profil sidebar** (`role-switcher.tsx` ditulis ulang): satu baris inisial + nama + nama peran (tanpa "Aktor RBAC · Akun Demo", tanpa dropdown besar). Klik → menu kecil: "Masuk sebagai" (5 peran, badge `MOCK`, hanya bila `NEXT_PUBLIC_DEMO_MODE=true`) dan "Keluar". Menutup dengan klik di luar / Esc. Inisial melewati gelar ("H. Ahmad Fauzi" → AF).
+  3. **Sakelar BR-21** pindah ke kartu **"Kirim WhatsApp Otomatis"** di `/ai-training`: sakelar Aktif/Nonaktif + penjelasan bahasa sehari-hari untuk tiap pilihan; **hanya Owner** yang bisa mengubah (peran lain terkunci dengan keterangan). Tetap `MOCK` dan dinyatakan jujur di kartu: belum tersambung WhatsApp, tersimpan di browser saja. Halaman Chatbot kini hanya menampilkan status "WhatsApp otomatis: Aktif · atur di AI Training".
+  4. `Switch` mendapat prop `disabled`. Flag `NEXT_PUBLIC_DEMO_MODE=true` ditambahkan ke `.env.local` (lokal) dan `.env.example`.
+- **File diubah:** `WEB ATAYLOR/src/components/shell/{topbar,role-switcher}.tsx`, `src/components/ui/switch.tsx`, `src/app/(dashboard)/{ai-training,agent-playground}/page.tsx`, `.env.example`, `AI_GUA.md` (§3.3, §6).
+- **Verifikasi:** `tsc --noEmit` bersih; `npm run build` lulus; server port 3000 dijalankan ulang. Chrome: sebagai Owner — profil ringkas tampil, menu terbuka/tertutup (Esc), sakelar Aktif↔Nonaktif berfungsi lalu dikembalikan ke Aktif; ganti peran ke Admin lewat menu "Masuk sebagai" berhasil; sebagai Admin sakelar terkunci; halaman Chatbot menampilkan status. Tampilan HP (drawer) untuk profil baru belum dicek ulang.
+- **Next Action:** simpan sakelar ke `tenants.automation_mode` saat integrasi WhatsApp (Fase 4) dimulai.
 
 ### [2026-10-19] — Claude (Claude Code) — Perbaikan: Pembayaran Gagal Saat Melampirkan Bukti
 - **Masalah (laporan pemilik):** catat pembayaran **dengan** bukti bayar gagal, tanpa bukti berhasil.

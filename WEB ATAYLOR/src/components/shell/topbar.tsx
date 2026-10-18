@@ -2,14 +2,10 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Zap, Bell, Shield, ChevronRight, Menu } from "lucide-react";
-import { useRole } from "./role-context";
-import { USER_ROLES } from "@/lib/constants";
+import { Bell, ChevronRight, Menu } from "lucide-react";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const pathname = usePathname();
-  const { activeRole, automationMode, toggleAutomationMode } = useRole();
-  const roleInfo = USER_ROLES.find((r) => r.id === activeRole);
 
   const getBreadcrumbTitle = () => {
     if (pathname === "/") return "Ringkasan Sistem";
@@ -46,33 +42,6 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       {/* Action / Indicators */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Automation Mode Toggle (BR-21) */}
-        <button
-          onClick={toggleAutomationMode}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
-            automationMode === "high_on"
-              ? "bg-dash-primary-soft text-dash-primary-strong"
-              : "bg-[#F1F2F6] text-dash-muted"
-          }`}
-          title="Mode Otomasi High/Low Season (BR-21)"
-        >
-          <Zap
-            className={`w-3.5 h-3.5 transition-transform duration-300 ${
-              automationMode === "high_on" ? "text-dash-primary-strong fill-dash-primary scale-110" : "text-dash-muted"
-            }`}
-          />
-          <span className="hidden md:inline">
-            Otomasi: <strong>{automationMode === "high_on" ? "High Season" : "Low Season"}</strong>
-          </span>
-        </button>
-
-        {/* Current Active Role Badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-dash-bg text-xs">
-          <Shield className="w-3.5 h-3.5 text-dash-primary-strong" />
-          <span className="text-dash-muted text-[11px]">Role:</span>
-          <span className="font-bold text-dash-text">{roleInfo?.label}</span>
-        </div>
-
         {/* Notification Bell */}
         <div className="relative p-2 text-dash-muted hover:text-dash-primary-strong hover:bg-dash-primary-soft rounded-lg cursor-pointer transition-colors">
           <Bell className="w-[18px] h-[18px]" />

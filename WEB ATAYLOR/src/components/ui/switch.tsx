@@ -7,20 +7,23 @@ export function Switch({
   onChange,
   label,
   description,
+  disabled = false,
   className,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   description?: string;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
-    <label className={cn("inline-flex items-start gap-2.5 cursor-pointer select-none", className)}>
+    <label className={cn("inline-flex items-start gap-2.5 select-none", disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer", className)}>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
           "relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200",

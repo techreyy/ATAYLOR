@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Send,
   CheckCheck,
@@ -8,10 +9,8 @@ import {
   RotateCcw,
   Sparkles,
   Phone,
-  Zap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
 import { useRole } from "@/components/shell/role-context";
 
@@ -24,7 +23,7 @@ interface ChatMessage {
 }
 
 export default function AgentPlaygroundPage() {
-  const { automationMode, toggleAutomationMode } = useRole();
+  const { automationMode } = useRole();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "m1",
@@ -105,14 +104,15 @@ export default function AgentPlaygroundPage() {
           </p>
         </div>
 
-        {/* High/Low Season Toggle */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-dash-line">
-          <Zap className={`w-3.5 h-3.5 ${automationMode === "high_on" ? "text-blue-600" : "text-zinc-400"}`} />
-          <span className="text-xs text-zinc-700">Mode: <strong>{automationMode === "high_on" ? "High Season" : "Low Season"}</strong></span>
-          <Button variant="outline" size="sm" onClick={toggleAutomationMode}>
-            Ganti Mode
-          </Button>
-        </div>
+        {/* Status sakelar BR-21 (diubah Owner di AI Training) */}
+        <Link
+          href="/ai-training"
+          className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-dash-line text-xs text-zinc-700 hover:border-dash-primary"
+        >
+          <span className={`w-2 h-2 rounded-full ${automationMode === "high_on" ? "bg-dash-success" : "bg-zinc-300"}`} />
+          WhatsApp otomatis: <strong>{automationMode === "high_on" ? "Aktif" : "Nonaktif"}</strong>
+          <span className="text-dash-muted">· atur di AI Training</span>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
