@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema Skydash dengan warna emas logo A-Taylor — kanvas krem hangat, teks gelap lembut */
+:root {
+  --background: #f7f6f2;
+  --foreground: #1f1f1f;
+  --dash-primary: #f5b800;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  ::selection {
+    background: rgba(245, 184, 0, 0.28);
+  }
+
+  /* Input, select, textarea: fokus berwarna primer Skydash dengan transisi halus */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--dash-primary) !important;
+    box-shadow: 0 0 0 3px rgba(245, 184, 0, 0.22) !important;
+    outline: none;
+  }
+
+  /* Scrollbar tipis */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d9d4c4 transparent;
+  }
+}
+
+/* Efek kilau skeleton */
+.dash-shimmer {
+  background: linear-gradient(90deg, #efece3 0%, #faf9f5 40%, #efece3 80%);
+  background-size: 800px 100%;
+}
+
+/* Isi halaman muncul berurutan (stagger) */
+.dash-stagger > * {
+  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dash-stagger > *:nth-child(2) { animation-delay: 0.04s; }
+.dash-stagger > *:nth-child(3) { animation-delay: 0.08s; }
+.dash-stagger > *:nth-child(4) { animation-delay: 0.12s; }
+.dash-stagger > *:nth-child(5) { animation-delay: 0.16s; }
+.dash-stagger > *:nth-child(6) { animation-delay: 0.2s; }
+.dash-stagger > *:nth-child(n + 7) { animation-delay: 0.24s; }
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tabular Nums utility for financial precision across all tables and badges */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hormati preferensi pengguna yang mengurangi animasi */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print View Clean A4 (SPK Final & Executive Recap) */
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  * {
+    animation: none !important;
+    /* Cetak warna latar (kartu KPI berteks putih, badge, grafik) walau opsi "Background graphics" mati */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:border {
+    border: 1px solid #e4e4e7 !important;
+  }
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+}

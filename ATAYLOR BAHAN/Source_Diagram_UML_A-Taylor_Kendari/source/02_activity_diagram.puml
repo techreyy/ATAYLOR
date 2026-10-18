@@ -1,0 +1,51 @@
+@startuml Activity_OrderLifecycle
+start
+:Terima pesanan via WhatsApp atau input offline oleh Admin;
+:Kumpulkan brief; pesanan offline wajib tag Marketing closer;
+while (Brief lengkap?) is (Tidak)
+ :Minta detail yang kurang;
+endwhile (Ya)
+:Periksa stok dan kapasitas produksi;
+if (Fast Track tersedia dan dipilih?) then (Ya)
+ :Reservasi stok SKU;
+else (Tidak)
+ :Hitung Dynamic Lead Time dari WIP + kapasitas;
+ :Negosiasi tanggal / tawarkan waitlist bila penuh;
+endif
+:Simpan pesanan dengan ID unik;
+:Buat tiket desain otomatis + SLA;
+:Designer mengerjakan dan mengunggah mockup versi N;
+if (Otomasi proofing aktif?) then (Ya)
+ :Mini Agent mengirim proofing via WhatsApp;
+else (Tidak)
+ :Admin meneruskan proofing manual;
+endif
+while (ACC desain?) is (Revisi)
+ :Buka tiket revisi dan catat alasan;
+ :Designer mengunggah versi baru;
+ :Kirim ulang proofing;
+endwhile (ACC)
+:Catat bukti ACC; Slot Lock 24 jam;
+if (Pembayaran valid sebelum 24 jam?) then (Ya)
+ :Admin validasi manual;
+ :Kunci kapasitas permanen;
+ :Admin terbitkan SPK Final;
+ :Owner/Manager dispatch vendor dan catat detail;
+ :Perbarui Kanban WIP berurutan;
+ if (QC lulus dan foto fisik ada?) then (Ya)
+  :Mini Agent mengirim foto QC + tagihan pelunasan;
+  if (Saldo lunas?) then (Ya)
+   :Serah-terima barang;
+   stop
+  else (Tidak)
+   :Tunggu pelunasan; barang ditahan kecuali izin Owner;
+   stop
+  endif
+ else (Tidak)
+  :Rework dengan alasan tercatat; kembali ke QC;
+ endif
+else (Tidak)
+ :Lepas slot/stok; tandai Kedaluwarsa; beri notifikasi;
+ stop
+endif
+@enduml

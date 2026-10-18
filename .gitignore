@@ -1,0 +1,24 @@
+# Toolchain portable lokal (PHP, Composer, PostgreSQL + data DB) — ±1,4 GB, tidak di-commit
+/.devtools/
+
+# Template referensi pihak ketiga (Skydash) — hanya acuan desain
+/skydash-free/
+
+# Dependensi & hasil build
+node_modules/
+/WEB ATAYLOR/.next/
+/WEB ATAYLOR/out/
+/WEB ATAYLOR/next-env.d.ts
+*.tsbuildinfo
+
+# Rahasia & konfigurasi lokal (API-ATAYLOR/.gitignore juga mengabaikan .env)
+.env
+.env.local
+.env.*.local
+
+# Sistem / editor
+.DS_Store
+Thumbs.db
+*.log
+/.vscode/
+/.idea/

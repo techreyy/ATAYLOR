@@ -1,0 +1,98 @@
+@startuml UseCase_A_Taylor
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+actor Pelanggan
+actor "Admin Sentral" as Admin
+actor Marketing
+actor Designer
+actor Owner
+actor Manager
+actor "Super Admin Platform" as SuperAdmin
+actor "Frontline AI" as AI
+actor "Mini Agent" as Mini
+actor "WhatsApp Business API" as WA
+rectangle "Omnichannel Agentic Ecosystem - A-taylor Kendari" {
+ package "Penjualan & Pemesanan" {
+  usecase "UC-01 Konsultasi & brief" as UC01
+  usecase "UC-02 Cek stok / Fast Track" as UC02
+  usecase "UC-03 Dynamic Lead Time" as UC03
+  usecase "UC-04 Input offline + closer" as UC04
+  usecase "UC-05 Verifikasi kuota/stok" as UC05
+  usecase "UC-10 Slot Locking & instruksi bayar" as UC10
+  usecase "UC-11 Validasi pembayaran" as UC11
+  usecase "UC-21 Eskalasi ke manusia" as UC21
+  usecase "UC-26 Kedaluwarsa / pembatalan" as UC26
+ }
+ package "Desain & Produksi" {
+  usecase "UC-06 Tiket desain otomatis" as UC06
+  usecase "UC-07 Kerjakan desain & mockup" as UC07
+  usecase "UC-08 Proofing & ACC digital" as UC08
+  usecase "UC-09 Manajemen revisi" as UC09
+  usecase "UC-12 SPK Final & dispatch" as UC12
+  usecase "UC-13 Pembaruan Kanban WIP" as UC13
+  usecase "UC-14 Notifikasi selesai + foto QC" as UC14
+ }
+ package "Stok & Analitik" {
+  usecase "UC-15 Kelola stok gudang" as UC15
+  usecase "UC-16 Executive Dashboard" as UC16
+  usecase "UC-22 Komisi & leaderboard" as UC22
+  usecase "UC-25 Early Warning" as UC25
+ }
+ package "AI Training & White-Label" {
+  usecase "UC-17 Kelola produk/harga/estimasi" as UC17
+  usecase "UC-18 Konfigurasi bahasa/tone AI" as UC18
+  usecase "UC-19 Sinkronisasi pengetahuan" as UC19
+  usecase "UC-20 Toggle otomasi" as UC20
+  usecase "UC-23 Manajemen pengguna/peran" as UC23
+  usecase "UC-24 Kelola tenant white-label" as UC24
+ }
+}
+Pelanggan -- UC01
+Pelanggan -- UC02
+Pelanggan -- UC03
+Pelanggan -- UC08
+Pelanggan -- UC09
+Pelanggan -- UC10
+Pelanggan -- UC11
+Pelanggan -- UC14
+Pelanggan -- UC26
+Admin -- UC04
+Admin -- UC05
+Admin -- UC11
+Admin -- UC12
+Admin -- UC13
+Admin -- UC15
+Admin -- UC23
+Marketing -- UC04
+Designer -- UC06
+Designer -- UC07
+Designer -- UC09
+Owner -- UC12
+Owner -- UC16
+Owner -- UC17
+Owner -- UC18
+Owner -- UC20
+Owner -- UC22
+Owner -- UC23
+Owner -- UC25
+Manager -- UC12
+SuperAdmin -- UC24
+AI -- UC01
+AI -- UC02
+AI -- UC03
+AI -- UC21
+Mini -- UC06
+Mini -- UC08
+Mini -- UC09
+Mini -- UC14
+Mini -- UC25
+WA -- UC01
+WA -- UC08
+WA -- UC14
+WA -- UC21
+note bottom of rectangle
+Vendor tidak memiliki akses sistem; Owner/Manager berkomunikasi di luar sistem.
+Pembayaran/bank tidak terintegrasi; validasi dilakukan Admin.
+end note
+@enduml

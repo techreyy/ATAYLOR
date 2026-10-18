@@ -1,0 +1,166 @@
+@startuml ClassDiagram_A_Taylor
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+class Tenant {
+ +idTenant: UUID
+ +namaToko: String
+ +logo: URI
+ +nomorWhatsApp: String
+ +statusLangganan: String
+}
+class Pengguna {
+ +idPengguna: UUID
+ +nama: String
+ +email: String
+ +statusAktif: Boolean
+ +tenantId: UUID
+}
+class Peran {
+ +idPeran: UUID
+ +namaPeran: String
+ +daftarIzin: String[]
+}
+class Pelanggan {
+ +idPelanggan: UUID
+ +nama: String
+ +nomorWA: String
+ +alamat: String
+}
+class Pesanan {
+ +idPesanan: UUID
+ +kanal: Enum
+ +status: Enum
+ +total: Decimal
+ +tenggat: Date
+}
+class ItemPesanan {
+ +idItem: UUID
+ +jumlah: Int
+ +warna: String
+ +ukuran: String
+ +hargaSatuan: Decimal
+}
+class Produk {
+ +idProduk: UUID
+ +nama: String
+ +harga: Decimal
+ +MOQ: Int
+ +kapasitasHarian: Int
+}
+class StokSKU {
+ +idSKU: UUID
+ +ukuran: String
+ +warna: String
+ +qty: Int
+ +qtyReservasi: Int
+}
+class SlotLock {
+ +idLock: UUID
+ +jenis: Enum
+ +status: Enum
+ +mulai: DateTime
+ +kedaluwarsa: DateTime
+}
+class TiketDesain {
+ +idTiket: UUID
+ +status: Enum
+ +SLA: DateTime
+ +jumlahRevisi: Int
+}
+class VersiDesain {
+ +idVersi: UUID
+ +nomorVersi: Int
+ +berkas: URI
+ +waktuUnggah: DateTime
+}
+class PersetujuanDesain {
+ +idACC: UUID
+ +waktu: DateTime
+ +nomorWA: String
+ +idPesanWA: String
+}
+class Pembayaran {
+ +idPembayaran: UUID
+ +metode: Enum
+ +nominal: Decimal
+ +status: Enum
+ +waktuValidasi: DateTime
+}
+class SPK {
+ +nomorSPK: String
+ +tanggalTerbit: Date
+ +tenggat: Date
+ +status: Enum
+}
+class Vendor {
+ +idVendor: UUID
+ +nama: String
+ +tipe: String
+ +kontak: String
+}
+class EntriWIP {
+ +idEntriWIP: UUID
+ +tahap: Enum
+ +waktu: DateTime
+ +catatan: String
+}
+class Marketing {
+ +idMarketing: UUID
+ +nama: String
+ +statusAktif: Boolean
+}
+class Komisi {
+ +idKomisi: UUID
+ +persentase: Decimal
+ +nominal: Decimal
+ +status: Enum
+}
+class PercakapanWA {
+ +idPercakapan: UUID
+ +nomorWA: String
+ +jenisPesan: String
+ +waktu: DateTime
+}
+class KonfigurasiAI {
+ +idKonfigurasi: UUID
+ +persona: String
+ +tone: String
+ +modeOtomasi: Enum
+ +versi: Int
+}
+class LogAudit {
+ +idLog: UUID
+ +aksi: String
+ +objek: String
+ +waktu: DateTime
+}
+class Notifikasi {
+ +idNotifikasi: UUID
+ +jenis: String
+ +kanal: String
+ +status: Enum
+}
+Tenant "1" -- "0..*" Pengguna
+Pengguna "0..*" -- "1" Peran
+Tenant "1" -- "1" KonfigurasiAI
+Pengguna "1" -- "0..*" LogAudit
+Pelanggan "1" -- "0..*" Pesanan
+Pesanan "1" -- "1..*" ItemPesanan
+ItemPesanan "0..*" -- "1" Produk
+Produk "1" -- "0..*" StokSKU
+Pesanan "1" -- "0..1" SlotLock
+Pesanan "1" -- "0..*" Pembayaran
+Pesanan "1" -- "1" TiketDesain
+TiketDesain "1" -- "1..*" VersiDesain
+VersiDesain "1" -- "0..1" PersetujuanDesain
+Pesanan "1" -- "0..*" EntriWIP
+Pesanan "1" -- "0..1" SPK
+SPK "0..*" -- "1" Vendor
+Marketing "1" -- "0..*" Pesanan : closer
+Marketing "1" -- "0..*" Komisi
+Pesanan "1" -- "0..*" PercakapanWA
+Pesanan "1" -- "0..*" Notifikasi
+note bottom
+Semua entitas tenant-scoped harus membawa tenantId / isolasi tenant. Pembayaran divalidasi manual; Vendor tidak login.
+end note
+@enduml

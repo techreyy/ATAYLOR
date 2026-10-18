@@ -1,0 +1,55 @@
+@startuml Sequence_OrderLifecycle
+autonumber
+actor Pelanggan
+participant "WhatsApp Business API" as WA
+participant "Frontline AI + LLM" as AI
+participant "OMS + Inventory" as OMS
+participant Designer
+participant "Mini Agent" as Mini
+participant "Admin Sentral" as Admin
+participant "Owner / Manager" as Manager
+participant Vendor
+Pelanggan -> WA: Kirim brief + lampiran
+WA -> AI: Webhook pesan masuk
+AI -> OMS: Ambil katalog, cek stok & kapasitas
+OMS --> AI: Produk, stok, WIP, kuota
+AI -> WA: Harga/MOQ + Fast Track atau estimasi
+WA -> Pelanggan: Tampilkan opsi
+Pelanggan -> WA: Konfirmasi brief dan jadwal
+AI -> OMS: Simpan percakapan + draft order (ID unik)
+OMS -> Mini: Event pesanan valid
+Mini -> Designer: Buat tiket desain + SLA
+Designer -> OMS: Unggah mockup versi N
+OMS -> Mini: Event mockup diunggah
+Mini -> WA: Proofing + tombol ACC/Revisi
+alt Pelanggan minta revisi
+ WA -> Mini: Webhook revisi
+ Mini -> OMS: Buka tiket revisi
+ OMS -> Designer: Revisi dikerjakan; unggah versi baru
+else Pelanggan ACC desain
+ WA -> Mini: Webhook ACC + ID pesan
+ Mini -> OMS: Catat versi, waktu, nomor WA, bukti ACC
+ OMS -> WA: Instruksi bayar; Slot Lock 24 jam
+end
+Pelanggan -> Admin: Bukti transfer / pembayaran tunai
+Admin -> OMS: Validasi manual nominal, rekening, tanggal
+alt Pembayaran valid dalam 24 jam
+ OMS -> OMS: Kunci kapasitas permanen
+ Admin -> OMS: Terbitkan SPK Final PDF
+ Manager -> Vendor: Serahkan SPK + bahan (di luar sistem)
+ Manager -> OMS: Catat vendor, tanggal kirim, tenggat
+ Admin -> OMS: Update Kanban sampai QC dan gudang
+ OMS -> Mini: QC selesai + foto fisik wajib
+ Mini -> WA: Foto QC + tagihan pelunasan
+ Pelanggan -> Admin: Bayar saldo tersisa
+ Admin -> OMS: Catat pelunasan + serah-terima
+else Belum valid setelah 24 jam
+ OMS -> OMS: Lepas slot/stok; status Kedaluwarsa
+ OMS -> WA: Notifikasi pembayaran kedaluwarsa
+ WA -> Pelanggan: Informasi kedaluwarsa/pembatalan
+end
+note over Admin,Manager
+Verifikasi pembayaran dilakukan manual. Vendor tidak login sistem.
+Jika otomasi Off, Admin meneruskan proofing manual dan mencatat ACC.
+end note
+@enduml
