@@ -18,7 +18,7 @@
 - **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`). Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
 - **Version control:** repo Git di root `R:JOBWeb ATAYLOR` (branch `main`). `.devtools/`, `skydash-free/`, `node_modules`, `vendor`, `.next`, dan semua `.env` **tidak** di-commit — jangan pernah commit password/APP_KEY.
-- **Test otomatis (wajib dijalankan setelah mengubah backend):** `cd API-ATAYLOR && php artisan test` → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 12 test / 112 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat.
+- **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 12 test / 112 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat.
 - **Berkas upload (bukti bayar, mockup, foto QC):** disimpan di disk **privat** (`storage/app/private/tenants/{tenant_id}/...`); kolom `*_url` berisi path, dan API mengembalikan **tautan bertanda tangan yang kedaluwarsa 30 menit** (`GET /api/v1/files/{path}`, middleware `signed`). Jangan simpan upload ke disk `public`.
 - **AI & Orkestrasi Service:** Python 3.12 + FastAPI (Webhook WA, LLM Abstraction Layer: Gemini 2.5 Flash [Utama] & Claude Haiku 4.5 [Eskalasi], Mini Agent, Dynamic Lead Time Engine).
 - **Database & Multi-Tenant:** PostgreSQL 16 (Shared Database, Shared Schema dengan kolom wajib `tenant_id` + Row-Level Security / RLS). `tenant_id` ditentukan server dari membership user, **tidak pernah** dari input browser.
@@ -216,6 +216,10 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-18] — Claude (Claude Code) — Script JALANKAN-TEST.bat
+- **Dikerjakan:** `JALANKAN-TEST.bat` di root: menyalakan PostgreSQL bila mati, menjalankan `php artisan test` dengan PHP portable, menampilkan ringkasan lulus/gagal. §1 diperbarui (perintah `php` biasa tidak dikenali karena PHP portable tidak ada di PATH).
+- **Verifikasi:** script dijalankan → 12 passed (112 assertions), "SEMUA TEST LULUS".
 
 ### [2026-10-18] — Claude (Claude Code) — Langkah 2: Git, Test Permanen, Nomor Urut, Upload Privat
 - **Dikerjakan:**
