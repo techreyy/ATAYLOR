@@ -278,6 +278,18 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
 
+### [2026-10-19] — Claude (Claude Code) — JALANKAN-DEMO.bat: Cek Kesehatan Sebelum Buka Browser
+- **Dikerjakan:** laporan presenter: login gagal "Tidak dapat terhubung ke server API" (pesan `client.ts` hanya muncul saat fetch gagal total → API :8000 tidak menyala). `JALANKAN-DEMO.bat` kini memeriksa: hasil SETUP (php.exe, pg_ctl, `vendor/`, `.env`, `node_modules`), `php -v` (gagal → arahkan ke VC++ Redistributable), start PostgreSQL (gagal → tampilkan 15 baris `pg.log`), port 8000 dipakai aplikasi lain (tampilkan prosesnya), lalu menunggu `GET /up` maks 30 detik sebelum membuka browser; tiap kegagalan menampilkan `[GAGAL]` + solusi lalu `pause`. Bila API sudah menyala, start API/scheduler dilewati. `tools/cek-api.ps1` (baru): exit 0 = API menjawab `/up`, 1 = port kosong, 2 = port dipakai lain; `-Tunggu N`. `CARA-PASANG-DEMO.txt`: entri masalah baru untuk pesan tersebut.
+- **File diubah:** `JALANKAN-DEMO.bat` (CRLF), `tools/cek-api.ps1` (baru), `CARA-PASANG-DEMO.txt`.
+- **Verifikasi:** `cek-api.ps1` diuji ketiga kondisi (port kosong → 1, listener lain di 8000 → 2, `php artisan serve` → 0). Salinan bat di folder tanpa `.devtools` → pesan "SETUP belum selesai" + exit 1. Alur penuh (PG + web + browser) tidak dijalankan ulang di laptop pengembang.
+- **Next Action:** presenter `git pull`, jalankan `JALANKAN-DEMO.bat`, kirim pesan `[GAGAL]` yang muncul bila masih gagal. Tidak di-commit/push.
+
+### [2026-10-19] — Claude (Claude Code) — CARA-PASANG-DEMO.txt: Panduan Presenter
+- **Dikerjakan:** `CARA-PASANG-DEMO.txt` (baru) — panduan langkah demi langkah berbahasa awam untuk teman presenter: pasang Git + Node LTS → `git clone` ke `C:\ATAYLOR` (atau ZIP) → `SETUP-DEMO.bat` → `JALANKAN-DEMO.bat` + akun demo → `RESET-DATA-DEMO.bat` / `git pull` → tabel masalah umum. Repo publik (kata pemilik), jadi langkah undangan collaborator tidak diperlukan.
+- **File diubah:** `CARA-PASANG-DEMO.txt` (baru), `AI_GUA.md` (§8).
+- **Verifikasi:** isi dicocokkan dengan `SETUP-DEMO.bat`, `tools/setup-demo.ps1`, `JALANKAN-DEMO.bat`, `RESET-DATA-DEMO.bat`. Tidak di-commit/push.
+- **Next Action:** pemilik commit + push bila ingin file ini ikut ter-clone oleh presenter.
+
 ### [2026-10-19] — Claude (Claude Code) — SETUP-DEMO.bat: Demo Offline di Laptop Presenter
 - **Latar:** semua host gratis yang dicoba minta kartu (Render, Koyeb, alwaysdata) dan Docker Space Hugging Face kini wajib PRO → **keputusan pemilik:** teman presenter (luar kota) clone dari GitHub dan menjalankan demo di laptopnya sendiri.
 - **Dikerjakan:** `SETUP-DEMO.bat` + `tools/setup-demo.ps1` (baru) — sekali jalan setelah clone: unduh PHP 8.3.35 NTS x64 & PostgreSQL 16.15 (checksum SHA-256 sama dengan `.devtools/dl` laptop pengembang) + Composer, `php.ini` (ekstensi sama), `initdb` port 5433 + role `ataylor_app` non-superuser + DB `ataylor` & `ataylor_test`, `.env` lokal + `key:generate`, `composer install`, `migrate:fresh --seed`, `.env.local` dari contoh, `npm ci` + build. Bisa diulang (langkah selesai dilewati). Ekstraksi pakai .NET ZipFile (tar.exe gagal di path Unicode); berhenti dengan pesan jelas bila path folder berisi karakter non-ASCII (PostgreSQL Windows tidak bisa jalan di path seperti itu). `.gitattributes`: `*.bat`/`*.ps1` CRLF. `DEPLOY.md` §0 (panduan presenter) + catatan HF wajib PRO.
