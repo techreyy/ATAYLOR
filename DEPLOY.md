@@ -3,6 +3,19 @@
 > Tujuan: link demo untuk presentasi. **Hanya data contoh** — jangan masukkan data pelanggan asli.
 > Untuk produksi nanti (VPS + Docker Compose, R2, Redis) lihat `AI_GUA.md` §6 Fase 4; pengaturan di bawah tinggal diganti.
 
+## 0. Demo di laptop lain (offline, gratis) — dipakai untuk presentasi
+Render, Koyeb, alwaysdata meminta kartu dan Docker Space Hugging Face kini wajib PRO, jadi presentasi memakai
+laptop presenter (Windows):
+1. Pasang **Git** dan **Node.js LTS** (nodejs.org). Pemilik repo mengundang presenter sebagai collaborator GitHub.
+2. `git clone https://github.com/techreyy/ATAYLOR.git` (atau unduh ZIP dari GitHub).
+3. Klik **`SETUP-DEMO.bat`** sekali (butuh internet ±500 MB, 10–20 menit): PHP 8.3, Composer, PostgreSQL 16
+   (port 5433) ke `.devtools/`, `.env` + `APP_KEY` baru, `composer install`, database + data contoh, `npm ci` + build.
+   Aman diulang bila terputus.
+4. Saat presentasi klik **`JALANKAN-DEMO.bat`** (tanpa internet). Akun: `admin@ataylor.demo` / `ataylor123`.
+   `RESET-DATA-DEMO.bat` mengembalikan data contoh.
+
+Bagian di bawah ini (online) tetap disimpan untuk nanti bila memakai hosting berbayar.
+
 Urutan: **1. GitHub → 2. Neon (database) → 3. Render (API) → 4. Vercel (web) → sambungkan CORS.**
 
 ## 1. GitHub
@@ -58,7 +71,9 @@ Setiap kali menyala, container menjalankan `docker/start.sh`: cache konfigurasi 
 Cek: buka `https://<api>.onrender.com/up` → halaman "Application up".
 
 ## 3b. Hugging Face Spaces — Laravel API (pengganti Render bila diminta kartu)
-Gratis tanpa kartu. Space harus **Public** agar API bisa diakses, tapi kode tetap privat: Space hanya berisi
+> **Sejak ±Juli 2026 Docker Space wajib akun PRO** (berbayar). Langkah ini hanya berlaku bila memakai PRO.
+
+Dulu gratis tanpa kartu. Space harus **Public** agar API bisa diakses, tapi kode tetap privat: Space hanya berisi
 `deploy/huggingface/Dockerfile` + `README.md`; kode diambil dari GitHub saat build.
 
 1. GitHub → **Settings → Developer settings → Fine-grained tokens → Generate**: hanya repo `ATAYLOR`,
