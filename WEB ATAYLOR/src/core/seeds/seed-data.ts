@@ -1,6 +1,6 @@
-// Data contoh untuk modul yang masih MOCK (Designer, Inventory, AI Training, Platform).
-// Modul OMS, Kasir, Kanban, SPK & Executive memakai API Laravel — lihat core/adapters/api.
-import { Product, DesignTicket } from "../types/catalog.types";
+// Data contoh untuk modul yang masih MOCK (Inventory, AI Training, Platform).
+// Modul OMS, Kasir, Kanban, SPK, Executive & CRM Designer memakai API Laravel — lihat core/adapters/api.
+import { Product } from "../types/catalog.types";
 import { MarketingCloser, TenantInfo, AuditLog, User } from "../types/platform.types";
 
 export const SEED_TENANT: TenantInfo = {
@@ -79,26 +79,6 @@ export const SEED_PRODUCTS: Product[] = [
     dpMinPercent: 50,
     stockAvailable: 85,
     stockReserved: 12,
-  },
-];
-
-
-
-
-
-export const SEED_DESIGN_TICKETS: DesignTicket[] = [
-  {
-    id: "dsg-t-01",
-    orderId: "ord-002",
-    orderCode: "ORD-2026-002",
-    customerName: "Komunitas Futsal Bahteramas",
-    designerName: "Rian Desain",
-    stage: "waiting_acc",
-    currentVersion: 2,
-    revisionsUsed: 1,
-    slaCountdownHours: 14,
-    mockupUrl: "/mock-assets/jersey-bahteramas-v2.png",
-    lastCustomerFeedback: "Tolong ganti warna nomor punggung jadi putih bergaris emas.",
   },
 ];
 

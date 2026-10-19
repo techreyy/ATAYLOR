@@ -8,6 +8,7 @@ use App\Models\DesignTicket;
 use App\Models\DesignVersion;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class DesignService
@@ -16,8 +17,49 @@ class DesignService
         'menunggu_pembayaran', 'pembayaran_valid', 'spk_terbit', 'produksi', 'menunggu_pelunasan', 'selesai', 'dibatalkan',
     ];
 
+    /** Jumlah tiket selesai terbaru yang ikut tampil di board CRM Designer. */
+    private const BOARD_DONE_LIMIT = 12;
+
     public function __construct(private AuditLogger $audit)
     {
+    }
+
+    /**
+     * Board CRM Designer: tiket yang masih berjalan (SLA terdekat dulu) + tiket selesai terbaru.
+     * Pesanan dibatalkan tidak ditampilkan.
+     */
+    public function board(): Collection
+    {
+        $base = fn () => DesignTicket::with(['designer', 'versions.approval', 'order.items.product'])
+            ->whereHas('order', fn ($q) => $q->where('status', '!=', 'dibatalkan'));
+
+        return $base()->where('status', '!=', 'selesai')->orderBy('sla_due_at')->get()
+            ->concat($base()->where('status', 'selesai')->latest('updated_at')->limit(self::BOARD_DONE_LIMIT)->get());
+    }
+
+    /**
+     * Designer mengambil tiket baru: tiket menjadi miliknya dan pesanan masuk "Desain Dikerjakan".
+     */
+    public function start(DesignTicket $ticket, User $actor): DesignTicket
+    {
+        return DB::transaction(function () use ($ticket, $actor) {
+            $ticket = DesignTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            $order = Order::whereKey($ticket->order_id)->lockForUpdate()->firstOrFail();
+
+            if ($ticket->status !== 'baru' || $order->status !== 'brief_lengkap') {
+                throw new BusinessRuleException('BR-04', 'Tiket ini sudah diambil atau sudah berjalan.');
+            }
+
+            $ticket->update(['status' => 'dikerjakan', 'designer_id' => $actor->id]);
+            $order->update(['status' => 'desain_dikerjakan']);
+
+            $this->audit->log('DESIGN_TICKET_STARTED', $order, ['status' => 'brief_lengkap'], [
+                'status' => 'desain_dikerjakan',
+                'designer_id' => $actor->id,
+            ]);
+
+            return $ticket;
+        });
     }
 
     /**

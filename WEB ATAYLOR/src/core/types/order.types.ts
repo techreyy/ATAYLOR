@@ -47,15 +47,31 @@ export interface DesignVersionInfo {
   approval: { channel: "wa_button" | "manual_admin"; approvedAt: string; approvedByWa?: string | null } | null;
 }
 
+export type DesignTicketStatus = "baru" | "dikerjakan" | "menunggu_acc" | "revisi" | "selesai";
+
 export interface DesignTicketInfo {
   id: string;
   orderId: string;
-  status: "baru" | "dikerjakan" | "menunggu_acc" | "revisi" | "selesai";
+  status: DesignTicketStatus;
   designerName?: string | null;
   slaDueAt?: string | null;
   revisionCount: number;
   lastFeedback?: string | null;
   versions?: DesignVersionInfo[];
+}
+
+/** Tiket di board CRM Designer (`GET /design-tickets`): tiket + konteks pesanan. */
+export interface DesignBoardTicket extends DesignTicketInfo {
+  orderCode: string;
+  orderStatus: OrderStatus;
+  customerName: string;
+  dueDate?: string | null;
+  notes?: string | null;
+  productName?: string | null;
+  color?: string | null;
+  totalQty: number;
+  freeRevisionLimit: number;
+  versions: DesignVersionInfo[];
 }
 
 export interface Order {

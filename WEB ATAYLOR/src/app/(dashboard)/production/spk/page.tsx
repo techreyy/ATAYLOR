@@ -50,7 +50,7 @@ export default function SpkDispatchPage() {
       setSpkList(spks);
       // Kandidat SPK: pesanan yang sudah melewati ACC dan belum punya SPK
       const c = orders.filter((o) =>
-        ["menunggu_acc", "menunggu_pembayaran", "pembayaran_valid", "kedaluwarsa", "brief_lengkap", "revisi"].includes(o.status)
+        ["menunggu_acc", "menunggu_pembayaran", "pembayaran_valid", "kedaluwarsa", "brief_lengkap", "desain_dikerjakan", "revisi"].includes(o.status)
       );
       setCandidates(c);
       setSelectedOrderId((prev) => prev || c.find((o) => o.status === "pembayaran_valid")?.id || c[0]?.id || "");

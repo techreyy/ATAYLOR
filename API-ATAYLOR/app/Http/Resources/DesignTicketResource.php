@@ -19,6 +19,18 @@ class DesignTicketResource extends JsonResource
             'slaDueAt' => $this->sla_due_at?->toIso8601String(),
             'revisionCount' => $this->revision_count,
             'lastFeedback' => $this->last_feedback,
+            // Konteks pesanan untuk board CRM Designer (hanya bila relasi order dimuat)
+            $this->mergeWhen($this->relationLoaded('order'), fn () => [
+                'orderCode' => $this->order->order_code,
+                'orderStatus' => $this->order->status,
+                'customerName' => $this->order->customer_name,
+                'dueDate' => $this->order->due_date?->toDateString(),
+                'notes' => $this->order->notes,
+                'productName' => $this->order->items->first()?->product?->name,
+                'color' => $this->order->items->first()?->color,
+                'totalQty' => (int) $this->order->items->sum('qty'),
+                'freeRevisionLimit' => (int) $this->order->items->min(fn ($i) => $i->product->free_revision_limit),
+            ]),
             'versions' => $this->whenLoaded('versions', fn () => $this->versions->map(fn ($v) => [
                 'id' => $v->id,
                 'versionNo' => $v->version_no,

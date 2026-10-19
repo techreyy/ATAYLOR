@@ -50,7 +50,11 @@ Route::prefix('v1')->group(function () {
         });
         Route::post('orders', [OrderController::class, 'store'])->middleware('role:admin');
 
-        // Desain & ACC (pendukung alur demo; CRM Designer penuh masih MOCK)
+        // CRM Designer: board tiket desain (semua peran internal melihat) & ambil tiket (BR-04)
+        Route::get('design-tickets', [DesignController::class, 'index'])->middleware('role:admin,owner,manager,designer');
+        Route::post('design-tickets/{ticket}/start', [DesignController::class, 'start'])->middleware('role:designer');
+
+        // Desain & ACC (BR-06, BR-17)
         Route::post('orders/{order}/design-versions', [DesignController::class, 'storeVersion'])->middleware('role:admin,designer');
         Route::post('design-versions/{version}/approve', [DesignController::class, 'approve'])->middleware('role:admin');
         Route::post('design-versions/{version}/request-revision', [DesignController::class, 'requestRevision'])->middleware('role:admin');

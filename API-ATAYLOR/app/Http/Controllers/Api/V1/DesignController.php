@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApproveDesignRequest;
 use App\Http\Requests\DesignVersionRequest;
+use App\Http\Resources\DesignTicketResource;
+use App\Models\DesignTicket;
 use App\Models\DesignVersion;
 use App\Models\Order;
 use App\Services\DesignService;
 use App\Services\FileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class DesignController extends Controller
 {
@@ -18,6 +21,21 @@ class DesignController extends Controller
         private DesignService $designs,
         private FileStorage $files,
     ) {
+    }
+
+    public function index(): AnonymousResourceCollection
+    {
+        return DesignTicketResource::collection($this->designs->board());
+    }
+
+    public function start(Request $request, string $ticket): JsonResponse
+    {
+        $model = $this->designs->start(DesignTicket::findOrFail($ticket), $request->user());
+
+        return response()->json([
+            'message' => 'Tiket diambil. Status pesanan: Desain Dikerjakan.',
+            'data' => new DesignTicketResource($model->load('designer')),
+        ]);
     }
 
     public function storeVersion(DesignVersionRequest $request, string $order): JsonResponse

@@ -44,7 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   // 6. Executive
   { name: "Executive Dashboard", href: "/executive", icon: BarChart3, section: "Analitik & Desain" },
   // 7. CRM Designer
-  { name: "CRM Designer", href: "/designer", icon: Palette, section: "Analitik & Desain", mock: true },
+  { name: "CRM Designer", href: "/designer", icon: Palette, section: "Analitik & Desain" },
   // 8. Inventory
   { name: "Inventory Gudang", href: "/inventory", icon: Boxes, section: "Analitik & Desain", mock: true },
 
