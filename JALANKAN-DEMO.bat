@@ -1,5 +1,5 @@
 @echo off
-REM Menjalankan seluruh demo A-Taylor: PostgreSQL 16 (port 5433), Laravel API (8000), Next.js (3000).
+REM Menjalankan seluruh demo A-Taylor: PostgreSQL 16 (port 5433), Laravel API (8001), Next.js (3000).
 REM Setiap bagian dicek dulu; bila gagal, penyebabnya ditampilkan dan browser tidak dibuka.
 setlocal
 set ROOT=%~dp0
@@ -14,17 +14,20 @@ if not exist "%ROOT%API-ATAYLOR\.env" goto belum_setup
 if not exist "%ROOT%WEB ATAYLOR\node_modules" goto belum_setup
 php -v >nul 2>&1
 if errorlevel 1 goto php_rusak
+set BUILD_ULANG=0
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%tools\pindah-port.ps1"
+if errorlevel 1 set BUILD_ULANG=1
 
 echo [1/3] Menyalakan PostgreSQL...
 pg_ctl -D "%ROOT%.devtools\pgdata" -o "-p 5433" status >nul 2>&1
 if errorlevel 1 pg_ctl -D "%ROOT%.devtools\pgdata" -l "%ROOT%.devtools\pg.log" -o "-p 5433" start -w
 if errorlevel 1 goto pg_gagal
 
-echo [2/3] Menyalakan Laravel API di http://127.0.0.1:8000 ...
+echo [2/3] Menyalakan Laravel API di http://127.0.0.1:8001 ...
 %CEK%
 if errorlevel 2 goto port_dipakai
 if errorlevel 1 (
-  start "A-Taylor API" /D "%ROOT%API-ATAYLOR" cmd /k "php artisan serve --host=127.0.0.1 --port=8000"
+  start "A-Taylor API" /D "%ROOT%API-ATAYLOR" cmd /k "php artisan serve --host=127.0.0.1 --port=8001"
   start "A-Taylor Scheduler (BR-07)" /D "%ROOT%API-ATAYLOR" cmd /k "php artisan schedule:work"
 ) else (
   echo     API sudah menyala, dilewati.
@@ -34,7 +37,8 @@ if errorlevel 1 goto api_gagal
 echo     API OK.
 
 echo [3/3] Menyalakan frontend di http://localhost:3000 ...
-if not exist "%ROOT%WEB ATAYLOR\.next\BUILD_ID" (
+if "%BUILD_ULANG%"=="1" (
+  echo     Membangun tampilan web, tunggu 1-3 menit...
   pushd "%ROOT%WEB ATAYLOR"
   call npm run build
   popd
@@ -71,9 +75,9 @@ goto gagal
 
 :port_dipakai
 echo.
-echo [GAGAL] Port 8000 sedang dipakai aplikasi lain (misalnya XAMPP, Laragon, atau server lain).
-echo   Program yang memakai port 8000:
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-Process -Id $_.OwningProcess } | Select-Object Id, ProcessName, Path | Format-Table -AutoSize"
+echo [GAGAL] Port 8001 sedang dipakai aplikasi lain (misalnya XAMPP, Laragon, atau server lain).
+echo   Program yang memakai port 8001:
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8001 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-Process -Id $_.OwningProcess } | Select-Object Id, ProcessName, Path | Format-Table -AutoSize"
 echo   Tutup program tersebut (atau restart laptop), lalu jalankan JALANKAN-DEMO.bat lagi.
 goto gagal
 

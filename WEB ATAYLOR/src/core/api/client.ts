@@ -2,7 +2,7 @@
  * HTTP client ke Laravel API (`API-ATAYLOR`). Token Sanctum disimpan per browser.
  * Pesan error aturan bisnis dari server (kode BR-xx) diteruskan apa adanya ke UI.
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
 
 export const TOKEN_KEY = "ataylor_api_token";
 

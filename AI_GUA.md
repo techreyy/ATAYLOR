@@ -16,7 +16,7 @@
 - **Backend Inti (Sumber Kebenaran Bisnis):** **Laravel 12** (PHP 8.3) + Sanctum (token API) — Pola: `Controller tipis -> FormRequest -> Service -> Eloquent -> PostgreSQL`. Lokasi: folder `API-ATAYLOR/` (API di `/api/v1`, aturan bisnis di `app/Services/`).
   - Ekspor Excel memakai `phpoffice/phpspreadsheet` ^5 (`app/Services/ExecutiveExcelExport.php`).
   - Catatan: spesifikasi awal menyebut Laravel 11, tetapi Laravel 11 sudah habis masa dukungan keamanan dan diblokir Composer karena 7 security advisory — **jangan turunkan ke 11**.
-- **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`). Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`.
+- **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`), API Laravel lokal port **8001**. Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`.
   - `.devtools/php/php.ini`: `upload_max_filesize = 10M`, `post_max_size = 12M` (bawaan PHP 2M/8M membuat foto HP gagal diunggah). `.devtools` tidak di-commit — **set nilai yang sama di server produksi** (dan `client_max_body_size` bila memakai Nginx). Setelah mengubah php.ini, server API harus dijalankan ulang.
   - Upload foto (bukti bayar, foto QC) dikompres di browser lewat `prepareUpload()` (`src/lib/image.ts`, sisi terpanjang 1920px, JPEG) sebelum dikirim; mockup tidak dikompres, hanya dicek ukurannya. Batas (`UPLOAD_LIMITS_MB`): bukti bayar 5 MB, foto QC 8 MB, mockup 8 MB.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
@@ -277,6 +277,12 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-19] — Claude (Claude Code) — API Lokal Pindah ke Port 8001
+- **Dikerjakan:** port 8000 di laptop presenter dipakai aplikasi lain → atas permintaan pemilik, API lokal/demo pindah ke **8001**. Diubah: default `client.ts`, `WEB ATAYLOR/.env.example`, template `.env` di `tools/setup-demo.ps1` (APP_URL), `config/sanctum.php` (stateful), `JALANKAN-DEMO.bat`, `tools/cek-api.ps1`, `CARA-PASANG-DEMO.txt`. `tools/pindah-port.ps1` (baru, dipanggil JALANKAN-DEMO sebelum API start): mengganti `127.0.0.1:8000`→`8001` di `API-ATAYLOR/.env` & `WEB ATAYLOR/.env.local` lama, dan exit 1 bila build `.next` belum memuat URL 8001 → JALANKAN-DEMO menjalankan `npm run build` sekali. Dockerfile (HF Spaces, port 8000 di dalam container) tidak diubah.
+- **File diubah:** lihat di atas + `.env`/`.env.local` laptop pengembang (tidak di-commit).
+- **Verifikasi:** `JALANKAN-DEMO.bat` dijalankan penuh di laptop pengembang dengan port 8000 sengaja tetap terpakai: setelan dimigrasi, web di-build ulang (0 chunk berisi `:8000`), API :8001 `/up` OK, `/login` 200, `POST /api/v1/auth/login` admin demo → 200 + token, CORS `*`.
+- **Next Action:** presenter `git pull` → `JALANKAN-DEMO.bat` (build ulang otomatis ±1-3 menit, sekali saja).
 
 ### [2026-10-19] — Claude (Claude Code) — JALANKAN-DEMO.bat: Cek Kesehatan Sebelum Buka Browser
 - **Dikerjakan:** laporan presenter: login gagal "Tidak dapat terhubung ke server API" (pesan `client.ts` hanya muncul saat fetch gagal total → API :8000 tidak menyala). `JALANKAN-DEMO.bat` kini memeriksa: hasil SETUP (php.exe, pg_ctl, `vendor/`, `.env`, `node_modules`), `php -v` (gagal → arahkan ke VC++ Redistributable), start PostgreSQL (gagal → tampilkan 15 baris `pg.log`), port 8000 dipakai aplikasi lain (tampilkan prosesnya), lalu menunggu `GET /up` maks 30 detik sebelum membuka browser; tiap kegagalan menampilkan `[GAGAL]` + solusi lalu `pause`. Bila API sudah menyala, start API/scheduler dilewati. `tools/cek-api.ps1` (baru): exit 0 = API menjawab `/up`, 1 = port kosong, 2 = port dipakai lain; `-Tunggu N`. `CARA-PASANG-DEMO.txt`: entri masalah baru untuk pesan tersebut.

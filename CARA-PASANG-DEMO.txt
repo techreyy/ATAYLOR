@@ -117,13 +117,13 @@ KALAU ADA MASALAH
        * SETUP belum selesai -> jalankan SETUP-DEMO.bat lagi.
        * PHP tidak bisa berjalan -> pasang Visual C++ Redistributable:
          https://aka.ms/vs/17/release/vc_redist.x64.exe
-       * Port 8000 dipakai aplikasi lain (XAMPP/Laragon) -> tutup.
+       * Port 8001 dipakai aplikasi lain (XAMPP/Laragon) -> tutup.
        * API tidak menyala -> foto jendela "A-Taylor API", kirim
          ke pengembang.
     -> Buka demo di laptop yang menjalankannya (localhost), bukan
        dari HP/laptop lain.
 
-- Halaman tidak bisa dibuka / port 3000 atau 8000 sudah dipakai
+- Halaman tidak bisa dibuka / port 3000 atau 8001 sudah dipakai
     -> Tutup aplikasi lain yang memakai port itu, atau restart
        laptop, lalu jalankan JALANKAN-DEMO.bat lagi.
 
