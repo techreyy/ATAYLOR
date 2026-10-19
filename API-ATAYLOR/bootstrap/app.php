@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Di hosting (Render/Railway) HTTPS diakhiri di proxy; percayai header X-Forwarded-* agar
+        // tautan file bertanda tangan memakai https dan tanda tangannya cocok.
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'tenant' => SetTenantContext::class,
             'role' => EnsureRole::class,

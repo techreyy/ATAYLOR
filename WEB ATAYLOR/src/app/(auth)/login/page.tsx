@@ -9,10 +9,13 @@ import { USER_ROLES, UserRole } from "@/lib/constants";
 import { useRole } from "@/components/shell/role-context";
 import { errorMessage } from "@/components/ui/error-state";
 
+/** Masuk cepat akun demo hanya untuk presentasi lokal; disembunyikan bila NEXT_PUBLIC_DEMO_MODE bukan "true". */
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 export default function LoginPage() {
   const router = useRouter();
   const { login, setActiveRole } = useRole();
-  const [email, setEmail] = useState("admin@ataylor.demo");
+  const [email, setEmail] = useState(DEMO_MODE ? "admin@ataylor.demo" : "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -97,25 +100,27 @@ export default function LoginPage() {
         </form>
 
         {/* Akun demo presentasi */}
-        <div className="mt-7 pt-5 border-t border-dash-line">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-dash-muted mb-2.5">
-            Masuk cepat akun demo <span className="normal-case font-normal">(sandi: <span className="font-mono">ataylor123</span>)</span>
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {USER_ROLES.map((role) => (
-              <button
-                key={role.id}
-                type="button"
-                disabled={busy}
-                onClick={() => run(() => setActiveRole(role.id as UserRole))}
-                className="text-left px-3 py-2 rounded-lg border border-dash-line bg-white text-xs font-semibold text-dash-muted hover:border-dash-primary hover:text-dash-primary-strong hover:bg-dash-primary-soft/50 hover:-translate-y-px disabled:opacity-50 transition-all duration-200"
-                title={role.description}
-              >
-                {role.label}
-              </button>
-            ))}
+        {DEMO_MODE && (
+          <div className="mt-7 pt-5 border-t border-dash-line">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-dash-muted mb-2.5">
+              Masuk cepat akun demo <span className="normal-case font-normal">(sandi: <span className="font-mono">ataylor123</span>)</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {USER_ROLES.map((role) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => run(() => setActiveRole(role.id as UserRole))}
+                  className="text-left px-3 py-2 rounded-lg border border-dash-line bg-white text-xs font-semibold text-dash-muted hover:border-dash-primary hover:text-dash-primary-strong hover:bg-dash-primary-soft/50 hover:-translate-y-px disabled:opacity-50 transition-all duration-200"
+                  title={role.description}
+                >
+                  {role.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <p className="text-center text-[11px] text-dash-muted font-mono mt-6">
           White-Label Ready • Sesuai SRS v1.0 & PRD v9.0

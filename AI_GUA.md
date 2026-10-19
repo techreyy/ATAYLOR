@@ -20,7 +20,8 @@
   - `.devtools/php/php.ini`: `upload_max_filesize = 10M`, `post_max_size = 12M` (bawaan PHP 2M/8M membuat foto HP gagal diunggah). `.devtools` tidak di-commit — **set nilai yang sama di server produksi** (dan `client_max_body_size` bila memakai Nginx). Setelah mengubah php.ini, server API harus dijalankan ulang.
   - Upload foto (bukti bayar, foto QC) dikompres di browser lewat `prepareUpload()` (`src/lib/image.ts`, sisi terpanjang 1920px, JPEG) sebelum dikirim; mockup tidak dikompres, hanya dicek ukurannya. Batas (`UPLOAD_LIMITS_MB`): bukti bayar 5 MB, foto QC 8 MB, mockup 8 MB.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
-- **Version control:** repo Git di root `R:JOBWeb ATAYLOR` (branch `main`). `.devtools/`, `skydash-free/`, `node_modules`, `vendor`, `.next`, dan semua `.env` **tidak** di-commit — jangan pernah commit password/APP_KEY.
+- **Online sementara (demo):** Vercel (`WEB ATAYLOR/`) + Render (Docker `API-ATAYLOR/Dockerfile` + PostgreSQL). Langkah & env lengkap di **`DEPLOY.md`**. Online: `NEXT_PUBLIC_DEMO_MODE=false`, `DEMO_LOGIN_ENABLED=false`, kata sandi akun contoh dari `SEED_USER_PASSWORD`, CORS dari `CORS_ALLOWED_ORIGINS` (`config/cors.php`).
+- **Version control:** repo Git di root (remote `origin` = `https://github.com/techreyy/ATAYLOR.git`) `R:JOBWeb ATAYLOR` (branch `main`). `.devtools/`, `skydash-free/`, `node_modules`, `vendor`, `.next`, dan semua `.env` **tidak** di-commit — jangan pernah commit password/APP_KEY.
 - **Test otomatis (wajib dijalankan setelah mengubah backend):** klik `JALANKAN-TEST.bat` (atau di PowerShell: `cd API-ATAYLOR; & "...devtoolsphpphp.exe" artisan test` — `php` portable tidak ada di PATH Windows) → PHPUnit di `tests/Feature/` memakai database terpisah `ataylor_test` (data demo `ataylor` tidak tersentuh). Saat ini 34 test / 301 assertion: login & RLS antar-tenant, RBAC, BR-02/04/05/06/07/08/09/10/11/12/24/27, nomor urut >999, file privat, rincian ukuran × jenis lengan, ekspor Excel, batas ukuran bukti bayar, notifikasi per peran, katalog produk & pola pesanan AI, board CRM Designer & ambil tiket. Helper `api()` di `tests/TestCase.php` mengosongkan konteks tenant sebelum tiap request agar perilaku RLS sama dengan request nyata.
 - **Berkas upload (bukti bayar, mockup, foto QC):** disimpan di disk **privat** (`storage/app/private/tenants/{tenant_id}/...`); kolom `*_url` berisi path, dan API mengembalikan **tautan bertanda tangan yang kedaluwarsa 30 menit** (`GET /api/v1/files/{path}`, middleware `signed`). Jangan simpan upload ke disk `public`.
 - **AI & Orkestrasi Service:** Python 3.12 + FastAPI (Webhook WA, LLM Abstraction Layer: Gemini 2.5 Flash [Utama] & Claude Haiku 4.5 [Eskalasi], Mini Agent, Dynamic Lead Time Engine).
@@ -206,7 +207,7 @@ Seluruh tabel **kecuali `tenants`** wajib memiliki `id` (UUID), `tenant_id` (UUI
 - [x] Test otomatis PHPUnit (19 test) — tambah test untuk setiap fitur backend baru.
 - [x] Git repo + commit pertama.
 - [x] Nomor urut order/SPK dibandingkan sebagai angka (tidak bentrok setelah 999/9999).
-- [ ] Sebelum online: `APP_DEBUG=false`, `DEMO_LOGIN_ENABLED=false`, batasi CORS ke domain frontend, ganti semua password DB, token login jangan di localStorage.
+- [ ] Sebelum online: `APP_DEBUG=false`, `DEMO_LOGIN_ENABLED=false`, batasi CORS ke domain frontend, ganti semua password DB, token login jangan di localStorage. *(19 Okt: semua sudah bisa diatur lewat env untuk demo online — lihat `DEPLOY.md`; token di localStorage **belum** diganti.)*
 
 ### Kebutuhan Fase 4 — Integrasi WhatsApp & AI (BELUM dikerjakan, daftar kebutuhan saja)
 > Sumber: SRS v1.0 (FR-CB, FR-MA, FR-AT), Arsitektur v2.0 (§4.2, §5.3, §5.5, §7.1, §8.2, §9), PRD v9.0. Angka biaya **tidak ada** di folder `ATAYLOR BAHAN` (dokumen "Rekomendasi Arsitektur Sistem & Analisis Biaya Operasional" yang dirujuk belum tersedia).
@@ -276,6 +277,17 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-19] — Claude (Claude Code) — Persiapan Online Sementara (Vercel + Render)
+- **Keputusan pemilik:** online sementara untuk presentasi (konfigurasi produksi menyusul), web di **Vercel**, **hanya login email + kata sandi** (tanpa masuk cepat demo), repo `https://github.com/techreyy/ATAYLOR.git`. Backend & database dipilih **Render** karena role database-nya bukan superuser (RLS tetap berlaku; superuser seperti `postgres` di Railway melewati RLS).
+- **Dikerjakan:**
+  1. Login: blok "Masuk cepat akun demo" (+ sandi `ataylor123`) dan email bawaan hanya tampil bila `NEXT_PUBLIC_DEMO_MODE=true`.
+  2. Backend: `config/cors.php` (origin dari `CORS_ALLOWED_ORIGINS`, bawaan `*` untuk lokal); `trustProxies('*')` di `bootstrap/app.php` agar tautan file bertanda tangan memakai https di balik proxy; kata sandi akun seeder dari `config('app.seed_user_password')` / env `SEED_USER_PASSWORD` (bawaan tetap `ataylor123`); perintah `app:prepare-deploy` (isi data contoh hanya bila tabel `tenants` kosong + peringatan bila role DB superuser/BYPASSRLS).
+  3. `API-ATAYLOR/Dockerfile` (FrankenPHP PHP 8.3 + pdo_pgsql, zip, gd, intl, bcmath, opcache), `docker/start.sh` (config/route cache → migrate → prepare-deploy → `schedule:work` → server di `$PORT`), `.dockerignore`; `.gitattributes` memaksa LF untuk `*.sh`/Dockerfile.
+  4. `DEPLOY.md`: langkah Render (Postgres + Web Service Docker) dan Vercel, daftar env, keterbatasan versi gratis.
+- **File diubah:** `WEB ATAYLOR/src/app/(auth)/login/page.tsx`, `API-ATAYLOR/{bootstrap/app.php,config/app.php,config/cors.php (baru),database/seeders/DatabaseSeeder.php,app/Console/Commands/PrepareDeploy.php (baru),Dockerfile (baru),docker/start.sh (baru),.dockerignore (baru)}`, `.gitattributes` (baru), `DEPLOY.md` (baru), `AI_GUA.md` (§1, §6).
+- **Verifikasi:** `php artisan test` → 34 passed (301 assertions) pada 11 dari 12 kali jalan; **1 kali gagal 1 test** di awal dan detailnya tidak tertangkap (kemungkinan bentrok dengan proses `JALANKAN-TEST.bat` yang masih menggantung, belum terbukti). `tsc --noEmit` bersih; `next build` dengan env online (`NEXT_PUBLIC_DEMO_MODE=false`, API URL contoh) lulus dan URL API tertanam di bundle; build lokal dikembalikan & server 3000 dijalankan ulang. **Dockerfile belum diuji** (Docker tidak terpasang di laptop) — build pertama di Render adalah uji pertamanya. Deploy Render/Vercel belum dilakukan (butuh akun pemilik).
+- **Next Action:** push ke GitHub → Render → Vercel sesuai `DEPLOY.md`; untuk produksi: R2 untuk upload, token di cookie httpOnly, VPS.
 
 ### [2026-10-19] — Claude (Claude Code) — CRM Designer Tersambung Data Nyata
 - **Keputusan pemilik:** (1) ada tombol "Mulai Kerjakan" — tiket menjadi milik Designer yang menekannya; (2) semua peran internal boleh melihat board, unggah mockup hanya Designer & Admin; (3) ACC / Minta Revisi tetap khusus Admin di detail pesanan (BR-06).

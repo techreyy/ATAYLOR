@@ -18,6 +18,9 @@ return [
     // Role Switcher demo (POST /api/v1/auth/demo-login). Matikan di produksi.
     'demo_login_enabled' => (bool) env('DEMO_LOGIN_ENABLED', false),
 
+    // Kata sandi akun contoh dari seeder. Lokal: ataylor123; server online wajib diganti lewat env.
+    'seed_user_password' => env('SEED_USER_PASSWORD', 'ataylor123'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

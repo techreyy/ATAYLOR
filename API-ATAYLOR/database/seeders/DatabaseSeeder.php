@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
                 'tenant_id' => null,
                 'name' => 'Super Admin Platform',
                 'email' => 'superadmin@ataylor.demo',
-                'password' => 'ataylor123',
+                'password' => config('app.seed_user_password'),
                 'role' => 'super_admin',
             ]);
 
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
                 'tenant_id' => $tenant->id,
                 'name' => $name,
                 'email' => $email,
-                'password' => 'ataylor123',
+                'password' => config('app.seed_user_password'),
                 'role' => $role,
             ]);
         }
@@ -308,7 +308,7 @@ class DatabaseSeeder extends Seeder
     {
         $admin = User::create([
             'tenant_id' => $tenant->id, 'name' => 'Admin Tenant B', 'email' => 'admin@tenantb.demo',
-            'password' => 'ataylor123', 'role' => 'admin',
+            'password' => config('app.seed_user_password'), 'role' => 'admin',
         ]);
         $product = Product::create([
             'name' => 'Kaos Tenant B', 'category' => 'Kaos Oblong', 'base_price' => 50000, 'moq' => 12,
