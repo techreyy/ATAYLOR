@@ -1,19 +1,29 @@
-# Deploy Online Sementara — Vercel (web) + Render (API & PostgreSQL)
+# Deploy Online Sementara — Vercel (web) + Render (API) + Neon (PostgreSQL)
 
 > Tujuan: link demo untuk presentasi. **Hanya data contoh** — jangan masukkan data pelanggan asli.
 > Untuk produksi nanti (VPS + Docker Compose, R2, Redis) lihat `AI_GUA.md` §6 Fase 4; pengaturan di bawah tinggal diganti.
 
-Urutan: **1. GitHub → 2. Render (database + API) → 3. Vercel (web) → 4. sambungkan CORS.**
+Urutan: **1. GitHub → 2. Neon (database) → 3. Render (API) → 4. Vercel (web) → sambungkan CORS.**
 
 ## 1. GitHub
 Repo: `https://github.com/techreyy/ATAYLOR` (sebaiknya **Private**). Setiap `git push` ke `main` membuat Vercel & Render deploy ulang otomatis.
 
-## 2. Render — PostgreSQL
-1. render.com → **New → Postgres**. Versi **16**, region **Singapore**.
-2. Setelah jadi, salin **Internal Database URL** (dipakai API di Render).
+## 2. Neon — PostgreSQL (gratis, tanpa kartu)
+1. neon.tech → **New Project**. Postgres **16**, region **AWS Asia Pacific (Singapore)**.
+2. **Jangan pakai role bawaan (`neondb_owner`) untuk API**: role buatan Console/API Neon adalah anggota
+   `neon_superuser` yang ber-**BYPASSRLS**, sehingga Row-Level Security tidak berlaku. Buat role khusus lewat
+   **SQL Editor** (role buatan SQL tidak ikut `neon_superuser`):
+   ```sql
+   CREATE ROLE ataylor_app WITH LOGIN PASSWORD 'ganti-sandi-panjang';
+   GRANT CONNECT, CREATE ON DATABASE neondb TO ataylor_app;
+   GRANT USAGE, CREATE ON SCHEMA public TO ataylor_app;
+   ```
+3. Susun `DB_URL` dari **Connection string** Neon dengan **Connection pooling OFF** (host tanpa `-pooler`) —
+   konteks tenant (`set_config(..., false)`) berlaku per sesi koneksi, jadi tidak boleh lewat PgBouncer mode transaksi:
+   `postgresql://ataylor_app:<sandi>@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
 
-> Role database Render bukan superuser, jadi Row-Level Security (RLS) tetap berlaku. Saat API menyala, log menulis
-> `Role database non-superuser: RLS aktif.` — bila muncul `PERINGATAN ... superuser`, isolasi tenant hanya dari filter aplikasi.
+> Saat API menyala, log harus menulis `Role database non-superuser: RLS aktif.` — bila muncul
+> `PERINGATAN ... superuser/BYPASSRLS`, `DB_URL` masih memakai `neondb_owner`.
 
 ## 3. Render — Laravel API
 1. **New → Web Service** → hubungkan repo GitHub.
@@ -30,7 +40,7 @@ Repo: `https://github.com/techreyy/ATAYLOR` (sebaiknya **Private**). Setiap `git
 | `APP_TIMEZONE` | `Asia/Makassar` |
 | `LOG_CHANNEL` | `stderr` |
 | `DB_CONNECTION` | `pgsql` |
-| `DB_URL` | Internal Database URL dari langkah 2 |
+| `DB_URL` | URL Neon dari langkah 2 (role `ataylor_app`, host tanpa `-pooler`, `?sslmode=require`) |
 | `DEMO_LOGIN_ENABLED` | `false` |
 | `SEED_USER_PASSWORD` | kata sandi baru untuk semua akun contoh (bukan `ataylor123`) |
 | `CORS_ALLOWED_ORIGINS` | sementara `*`, setelah langkah 4 diganti domain Vercel |
@@ -47,6 +57,30 @@ Setiap kali menyala, container menjalankan `docker/start.sh`: cache konfigurasi 
 
 Cek: buka `https://<api>.onrender.com/up` → halaman "Application up".
 
+## 3b. Hugging Face Spaces — Laravel API (pengganti Render bila diminta kartu)
+Gratis tanpa kartu. Space harus **Public** agar API bisa diakses, tapi kode tetap privat: Space hanya berisi
+`deploy/huggingface/Dockerfile` + `README.md`; kode diambil dari GitHub saat build.
+
+1. GitHub → **Settings → Developer settings → Fine-grained tokens → Generate**: hanya repo `ATAYLOR`,
+   izin **Contents: Read-only**. Salin token.
+2. huggingface.co → **New Space** → SDK **Docker** (Blank) → **Public** → hardware **CPU basic (free)**.
+3. Di Space → **Files → Add file → Create new file**: buat `Dockerfile` dan `README.md` (timpa yang ada) dengan isi
+   persis dari `deploy/huggingface/`.
+4. Space → **Settings → Variables and secrets → New secret**:
+
+| Nama | Nilai |
+|---|---|
+| `GITHUB_TOKEN` | token langkah 1 (dipakai hanya saat build) |
+| `APP_KEY` | hasil `key:generate --show` |
+| `SEED_USER_PASSWORD` | kata sandi akun contoh |
+| `DB_URL` | URL Neon (langkah 2). **Kosongkan/hapus** bila log menunjukkan koneksi ke Neon gagal (port 5432 diblokir) → API memakai PostgreSQL di dalam container (data contoh terisi ulang tiap restart) |
+
+   Variabel lain sudah ada di Dockerfile; `APP_URL` otomatis dari `SPACE_HOST`. `CORS_ALLOWED_ORIGINS` bisa
+   ditambah sebagai **Variable** untuk menimpa `*`.
+5. **Settings → Factory rebuild**. URL API: `https://<user>-<space>.hf.space` (cek `/up`). Setiap `git push` ke GitHub
+   **tidak** otomatis membangun ulang Space — tekan **Factory rebuild**.
+6. Space gratis tidur setelah 48 jam tanpa akses; bangun saat dibuka (perlu ±1–2 menit).
+
 ## 4. Vercel — Next.js
 1. vercel.com → **Add New → Project** → impor repo GitHub.
 2. **Root Directory:** `WEB ATAYLOR` (Framework: Next.js terdeteksi otomatis).
@@ -54,7 +88,7 @@ Cek: buka `https://<api>.onrender.com/up` → halaman "Application up".
 
 | Nama | Nilai |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com/api/v1` |
+| `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com/api/v1` atau `https://<user>-<space>.hf.space/api/v1` |
 | `NEXT_PUBLIC_DEMO_MODE` | `false` (menyembunyikan "Masuk cepat akun demo" & "Masuk sebagai") |
 
 4. Deploy. Nilai `NEXT_PUBLIC_*` ditanam saat build — bila diubah, **Redeploy**.
@@ -65,7 +99,8 @@ Email akun contoh sama dengan lokal (`admin@`, `owner@`, `manager@`, `designer@a
 
 ## Keterbatasan versi sementara
 - **Render paket gratis tidur setelah ±15 menit tanpa akses**; akses pertama bisa ±1 menit. Buka link beberapa menit sebelum presentasi.
-- **Database gratis Render punya masa berlaku** (cek dashboard Render).
+- **Neon gratis** tidak kedaluwarsa, tapi database tidur saat sepi (bangun ±1 detik) dan kuota penyimpanan/compute kecil — cukup untuk data contoh.
 - **File unggahan** (bukti bayar, mockup, foto QC) tersimpan di disk container dan **hilang saat deploy ulang/restart** — sampai disk dipindah ke Cloudflare R2.
 - Token login masih di `localStorage` (lihat AI_GUA §6 sebelum dipakai sungguhan).
-- Mengulang data contoh: hapus & buat ulang database Render, lalu deploy ulang API.
+- Mengulang data contoh: di SQL Editor Neon jalankan `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` lalu ulangi
+  `GRANT USAGE, CREATE ON SCHEMA public TO ataylor_app;`, kemudian deploy ulang API.
