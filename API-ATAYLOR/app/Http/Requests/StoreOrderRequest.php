@@ -28,6 +28,9 @@ class StoreOrderRequest extends FormRequest
             'items.*.sleeve_type' => ['required', Rule::in(OrderItem::SLEEVE_TYPES)],
             'items.*.size' => ['required', Rule::in(OrderItem::SIZES)],
             'items.*.qty' => ['required', 'integer', 'min:1', 'max:100000'],
+            // Harga custom per pcs untuk pesanan ini, per jenis lengan; yang tidak diisi memakai harga katalog
+            'custom_unit_prices' => ['nullable', 'array:'.implode(',', OrderItem::SLEEVE_TYPES)],
+            'custom_unit_prices.*' => ['nullable', 'integer', 'min:1000', 'max:100000000'],
         ];
     }
 
@@ -61,6 +64,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.sleeve_type' => 'jenis lengan',
             'items.*.size' => 'ukuran',
             'items.*.qty' => 'qty',
+            'custom_unit_prices' => 'harga custom',
+            'custom_unit_prices.*' => 'harga custom',
         ];
     }
 }

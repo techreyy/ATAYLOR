@@ -39,6 +39,8 @@ export default function DashboardOverviewPage() {
   const wipCount = (orders ?? []).filter((o) => o.status === "produksi" || o.status === "spk_terbit").length;
   const lockedCount = (orders ?? []).filter((o) => o.slotLockStatus === "temp_24h").length;
   const fmt = (n: string) => (orders === null ? "…" : n);
+  // Angka Rupiah di ringkasan tidak ditampilkan untuk Admin & Designer (keputusan pemilik)
+  const showRupiah = activeRole !== "admin" && activeRole !== "designer";
 
   return (
     <div className="space-y-6 dash-stagger">
@@ -100,8 +102,12 @@ export default function DashboardOverviewPage() {
 
         {/* Kartu KPI berwarna khas Skydash */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <KpiTile color="bg-dash-primary" title="Nilai Pesanan Aktif" value={fmt(formatRupiah(totalOmzet))} note={fmt(`${active.length} pesanan aktif`)} />
-          <KpiTile color="bg-dash-charcoal" title="Pembayaran Tervalidasi" value={fmt(formatRupiah(totalPaid))} note="Verifikasi manual Admin" />
+          {showRupiah && (
+            <>
+              <KpiTile color="bg-dash-primary" title="Nilai Pesanan Aktif" value={fmt(formatRupiah(totalOmzet))} note={fmt(`${active.length} pesanan aktif`)} />
+              <KpiTile color="bg-dash-charcoal" title="Pembayaran Tervalidasi" value={fmt(formatRupiah(totalPaid))} note="Verifikasi manual Admin" />
+            </>
+          )}
           <KpiTile color="bg-dash-tale" title="WIP Lantai Produksi" value={fmt(`${wipCount} Order`)} note="Antrean s.d. QC Pabrik" />
           <KpiTile color="bg-dash-light-danger" title="Slot Lock 24 Jam" value={fmt(`${lockedCount} Order`)} note="Menunggu validasi DP" />
         </div>

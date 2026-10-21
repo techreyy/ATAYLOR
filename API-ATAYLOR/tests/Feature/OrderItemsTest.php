@@ -116,6 +116,37 @@ class OrderItemsTest extends TestCase
         $this->assertSame(20 * 95000, $order['items'][0]['subtotal']);
     }
 
+    public function test_custom_unit_price_per_sleeve_type_overrides_catalog_price(): void
+    {
+        $order = $this->postOrder([
+            ['sleeve_type' => 'pendek', 'size' => 'M', 'qty' => 10],
+            ['sleeve_type' => 'panjang', 'size' => 'L', 'qty' => 5],
+        ], ['custom_unit_prices' => ['panjang' => 110000]])->assertCreated()->json('data');
+
+        // Pendek tetap harga katalog, panjang memakai harga custom
+        $this->assertSame(10 * 95000 + 5 * 110000, $order['totalAmount']);
+        $this->assertSame((int) ceil((10 * 95000 + 5 * 110000) / 2), $order['dpRequired']);
+        $prices = collect($order['items'])->pluck('unitPrice', 'sleeveType')->all();
+        $this->assertSame(['pendek' => 95000, 'panjang' => 110000], $prices);
+
+        // Harga katalog tidak berubah
+        $catalog = collect($this->api('admin', 'GET', '/products')->json('data'))->firstWhere('id', $this->poloId());
+        $this->assertSame(95000, $catalog['basePrice']);
+
+        // Jejak audit mencatat harga custom & harga katalog
+        $log = collect($this->api('owner', 'GET', '/audit-logs')->json('data'))->firstWhere('entityId', $order['id']);
+        $this->assertSame(['panjang' => 110000], $log['newValues']['custom_unit_prices']);
+        $this->assertSame(95000, $log['newValues']['catalog_unit_price']);
+    }
+
+    public function test_invalid_custom_unit_price_is_rejected(): void
+    {
+        $items = [['sleeve_type' => 'pendek', 'size' => 'L', 'qty' => 20]];
+        $this->postOrder($items, ['custom_unit_prices' => ['pendek' => 500]])->assertStatus(422)->assertJsonValidationErrors('custom_unit_prices.pendek');
+        $this->postOrder($items, ['custom_unit_prices' => ['pendek' => 'murah']])->assertStatus(422);
+        $this->postOrder($items, ['custom_unit_prices' => ['rompi' => 90000]])->assertStatus(422)->assertJsonValidationErrors('custom_unit_prices');
+    }
+
     public function test_old_rows_without_sleeve_type_default_to_pendek(): void
     {
         $sleeve = $this->db(function () {

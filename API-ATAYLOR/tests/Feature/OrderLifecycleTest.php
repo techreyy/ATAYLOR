@@ -17,6 +17,18 @@ class OrderLifecycleTest extends TestCase
 
     protected bool $seed = true;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local'); // bukti bayar wajib diunggah
+    }
+
+    /** Bukti bayar wajib untuk tunai maupun transfer. */
+    private function proof(): UploadedFile
+    {
+        return UploadedFile::fake()->image('bukti.jpg');
+    }
+
     private function poloId(): string
     {
         return collect($this->api('admin', 'GET', '/products')->json('data'))
@@ -52,7 +64,7 @@ class OrderLifecycleTest extends TestCase
         $order = $this->createOrder();
         $this->api('admin', 'POST', "/orders/{$order['id']}/design-versions")->assertCreated();
         $this->api('admin', 'POST', '/design-versions/'.$this->latestVersionId($order['id']).'/approve', ['channel' => 'manual_admin'])->assertOk();
-        $pay = $this->api('admin', 'POST', "/orders/{$order['id']}/payments", ['method' => 'transfer', 'amount' => $order['dpRequired']])->json('data');
+        $pay = $this->api('admin', 'POST', "/orders/{$order['id']}/payments", ['method' => 'transfer', 'amount' => $order['dpRequired'], 'proof' => $this->proof()])->json('data');
         $this->api('admin', 'POST', "/payments/{$pay['id']}/validate")->assertOk();
         $spk = $this->api('admin', 'POST', "/orders/{$order['id']}/spk")->assertCreated()->json('data');
 
@@ -111,8 +123,8 @@ class OrderLifecycleTest extends TestCase
         $this->assertSame('temp_24h', $detail['slotLockStatus']);
 
         // Kasir manual (BR-08)
-        $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 99999999])->assertStatus(422);
-        $pay = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 950000])->assertCreated()->json('data');
+        $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 99999999, 'proof' => $this->proof()])->assertStatus(422);
+        $pay = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 950000, 'proof' => $this->proof()])->assertCreated()->json('data');
         $this->assertSame('pending', $pay['status']);
         $this->api('admin', 'POST', "/payments/{$pay['id']}/validate")->assertOk()->assertJsonPath('data.status', 'valid');
 
@@ -149,7 +161,7 @@ class OrderLifecycleTest extends TestCase
         ])->assertOk()->assertJsonPath('data.status', 'menunggu_pelunasan');
 
         // Pelunasan -> selesai (BR-11)
-        $final = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'cash', 'amount' => 950000])->json('data');
+        $final = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'cash', 'amount' => 950000, 'proof' => $this->proof()])->json('data');
         $this->api('admin', 'POST', "/payments/{$final['id']}/validate")->assertOk();
         $done = $this->api('admin', 'GET', "/orders/{$id}")->json('data');
         $this->assertSame('selesai', $done['status']);
@@ -167,7 +179,7 @@ class OrderLifecycleTest extends TestCase
         $id = $order['id'];
         $this->api('admin', 'POST', "/orders/{$id}/design-versions")->assertCreated();
         $this->api('admin', 'POST', '/design-versions/'.$this->latestVersionId($id).'/approve', ['channel' => 'manual_admin'])->assertOk();
-        $pay = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 950000])->json('data');
+        $pay = $this->api('admin', 'POST', "/orders/{$id}/payments", ['method' => 'transfer', 'amount' => 950000, 'proof' => $this->proof()])->json('data');
 
         $this->db(fn () => Order::whereKey($id)->update(['slot_lock_expires_at' => now()->subMinute()]));
 

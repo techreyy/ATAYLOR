@@ -80,22 +80,28 @@ class OrderService
             throw new BusinessRuleException('MOQ', "Kuantitas minimal (MOQ) {$product->name} adalah {$product->moq} pcs (total saat ini {$totalQty} pcs).");
         }
 
-        // Harga satuan selalu dari katalog server, bukan dari browser
-        $items = collect($data['items'])->map(fn (array $item) => [
-            'product_id' => $product->id,
-            'color' => $data['color'],
-            'sleeve_type' => $item['sleeve_type'],
-            'size' => $item['size'],
-            'qty' => $item['qty'],
-            'unit_price' => $product->base_price,
-            'subtotal' => $product->base_price * $item['qty'],
-        ]);
+        // Harga satuan dari katalog server; Admin boleh memasang harga custom per jenis lengan untuk pesanan ini.
+        // Harga/subtotal per item yang dikirim browser tetap diabaikan.
+        $customPrices = array_filter($data['custom_unit_prices'] ?? [], fn ($price) => $price !== null);
+        $items = collect($data['items'])->map(function (array $item) use ($product, $data, $customPrices) {
+            $unitPrice = (int) ($customPrices[$item['sleeve_type']] ?? $product->base_price);
+
+            return [
+                'product_id' => $product->id,
+                'color' => $data['color'],
+                'sleeve_type' => $item['sleeve_type'],
+                'size' => $item['size'],
+                'qty' => $item['qty'],
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $item['qty'],
+            ];
+        });
 
         $total = (int) $items->sum('subtotal');
         $dpRequired = (int) ceil($total * $product->dp_min_percent / 100);
         $slaHours = (int) $product->design_sla_hours;
 
-        return DB::transaction(function () use ($data, $actor, $items, $total, $dpRequired, $slaHours) {
+        return DB::transaction(function () use ($data, $actor, $items, $total, $dpRequired, $slaHours, $customPrices, $product) {
             $order = Order::create([
                 'order_code' => $this->sequence->nextOrderCode($actor->tenant_id),
                 'customer_name' => $data['customer_name'],
@@ -125,7 +131,7 @@ class OrderService
 
             $this->audit->log('ORDER_CREATED', $order, null, $order->only([
                 'order_code', 'channel', 'marketing_closer_id', 'total_amount', 'dp_required',
-            ]));
+            ]) + ($customPrices ? ['custom_unit_prices' => $customPrices, 'catalog_unit_price' => $product->base_price] : []));
 
             return $order;
         });

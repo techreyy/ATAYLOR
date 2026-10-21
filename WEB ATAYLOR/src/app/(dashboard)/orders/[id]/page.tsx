@@ -55,7 +55,8 @@ const inputCls =
 export default function OrderDetailPage() {
   const params = useParams();
   const { activeRole } = useRole();
-  const isAdmin = activeRole === "admin";
+  // Owner mengakses semua fitur, termasuk aksi Admin
+  const isAdmin = activeRole === "admin" || activeRole === "owner";
   const [order, setOrder] = useState<Order | null>(null);
   const [gate, setGate] = useState<SpkGate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +72,7 @@ export default function OrderDetailPage() {
   const [payAmount, setPayAmount] = useState(0);
   const [payNotes, setPayNotes] = useState("");
   const [payProof, setPayProof] = useState<File | null>(null);
+  const [manualOnlinePay, setManualOnlinePay] = useState(false);
   const [rejectFor, setRejectFor] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState("");
 
@@ -497,7 +499,22 @@ export default function OrderDetailPage() {
             </div>
           )}
 
-          {canRecordPayment && (
+          {/* Online: bukti dikirim pelanggan lewat WA/chatbot & langsung masuk sistem. Offline: Admin input manual. */}
+          {canRecordPayment && order.channel === "online" && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-100">
+              <p className="text-zinc-600">
+                Pesanan online: pelanggan mengirim bukti bayar lewat WhatsApp/chatbot dan bukti langsung masuk ke antrean Kasir
+                untuk divalidasi. <span className="text-zinc-400">(Integrasi WhatsApp belum aktif.)</span>
+              </p>
+              {!manualOnlinePay && (
+                <Button variant="outline" size="sm" onClick={() => setManualOnlinePay(true)}>
+                  Catat manual (cadangan)
+                </Button>
+              )}
+            </div>
+          )}
+
+          {canRecordPayment && (order.channel === "offline" || manualOnlinePay) && (
             <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end pt-2 border-t border-zinc-100">
               <div>
                 <label htmlFor="pay-method" className="block text-[11px] text-zinc-500 mb-1">Metode</label>
@@ -516,15 +533,17 @@ export default function OrderDetailPage() {
               </div>
               <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dash-line bg-white text-zinc-600 cursor-pointer hover:bg-zinc-50 truncate">
                 <Upload className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{payProof ? payProof.name : "Bukti bayar"}</span>
+                <span className="truncate">{payProof ? payProof.name : payMethod === "cash" ? "Bukti bayar * (foto nota)" : "Bukti bayar * (bukti transfer)"}</span>
                 <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => setPayProof(e.target.files?.[0] ?? null)} />
               </label>
               <Button
                 variant="primary"
                 size="md"
-                disabled={busy || payAmount < 1000}
+                disabled={busy || payAmount < 1000 || !payProof}
+                title={payProof ? undefined : "Lampirkan bukti bayar (wajib untuk tunai maupun transfer)"}
                 onClick={() =>
                   act(async () => {
+                    if (!payProof) throw new Error("Bukti bayar wajib dilampirkan, baik pembayaran tunai maupun transfer.");
                     await paymentRepository.recordPayment(order.id, { method: payMethod, amount: payAmount, notes: payNotes, proof: payProof });
                     setPayNotes("");
                     setPayProof(null);

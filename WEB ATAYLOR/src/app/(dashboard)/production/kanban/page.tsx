@@ -28,7 +28,7 @@ type Pending = { order: Order; target: KanbanStageId; kind: "rework" | "qc" };
 
 export default function KanbanPage() {
   const { activeRole } = useRole();
-  const canMove = activeRole === "admin"; // SRS §2.3: Admin memperbarui Kanban (BR-13)
+  const canMove = activeRole === "admin" || activeRole === "owner"; // SRS §2.3: Admin memperbarui Kanban (BR-13); Owner mengakses semua
   const [stageOrders, setStageOrders] = useState<Record<KanbanStageId, Order[]>>(EMPTY);
   const [histories, setHistories] = useState<WipHistory[]>([]);
   const [loading, setLoading] = useState(true);

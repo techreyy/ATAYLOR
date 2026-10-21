@@ -122,6 +122,8 @@ export interface CreateOrderInput {
   color: string;
   // Hanya ukuran dengan qty > 0; harga dihitung server dari katalog
   items: { sleeve_type: SleeveType; size: string; qty: number }[];
+  // Harga custom per pcs per jenis lengan (opsional); yang tidak diisi memakai harga katalog
+  custom_unit_prices?: Partial<Record<SleeveType, number>>;
 }
 
 export interface OrderFilters {

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 | Hak akses mengikuti SRS §2.3:
 | Admin: OMS, kasir, Kanban, penerbitan SPK. Manager: dispatch vendor (baca SPK).
 | Designer: board desain. Owner: dashboard, audit log, dispatch vendor.
+| Owner dapat mengakses SEMUA route di bawah (dijamin middleware EnsureRole), walau tidak tertulis di role:...
 */
 
 Route::prefix('v1')->group(function () {

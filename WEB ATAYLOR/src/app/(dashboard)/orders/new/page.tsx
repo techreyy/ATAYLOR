@@ -59,6 +59,9 @@ export default function NewOrderPage() {
   const [advanced, setAdvanced] = useState(false);
   const [confirmDisableAdvanced, setConfirmDisableAdvanced] = useState(false);
   const nextBlockKey = useRef(1);
+  // Harga custom per pcs per jenis lengan; hanya dipakai bila sakelar Harga Custom aktif
+  const [customPrice, setCustomPrice] = useState(false);
+  const [customPrices, setCustomPrices] = useState<Record<SleeveType, number>>({ pendek: 0, panjang: 0 });
   const [dueDate, setDueDate] = useState(addDays(21));
   const [notes, setNotes] = useState("");
 
@@ -79,10 +82,12 @@ export default function NewOrderPage() {
   // Pratinjau kalkulasi — angka final selalu dihitung ulang server (BR-10)
   const selectedProduct = products.find((p) => p.id === selectedProductId);
   const unitPrice = selectedProduct?.basePrice ?? 0;
+  const priceOf = (sleeve: SleeveType) => (customPrice ? customPrices[sleeve] : unitPrice);
   const dpPercent = selectedProduct?.dpMinPercent ?? 50;
   const totalQty = blocks.reduce((sum, b) => sum + blockTotal(b), 0);
   const belowMoq = !!selectedProduct && totalQty < selectedProduct.moq;
-  const totalAmount = unitPrice * totalQty;
+  const totalAmount = blocks.reduce((sum, b) => sum + blockTotal(b) * priceOf(b.sleeveType), 0);
+  const invalidCustomPrice = customPrice && blocks.some((b) => customPrices[b.sleeveType] < 1000);
   const dpRequired = Math.ceil((totalAmount * dpPercent) / 100);
   const unusedSleeve = SLEEVE_TYPES.find((s) => !blocks.some((b) => b.sleeveType === s.id));
 
@@ -110,6 +115,12 @@ export default function NewOrderPage() {
     else turnOffAdvanced();
   };
 
+  const handleCustomPriceChange = (on: boolean) => {
+    // Mulai dari harga katalog produk terpilih
+    if (on) setCustomPrices({ pendek: unitPrice, panjang: unitPrice });
+    setCustomPrice(on);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessageText(null);
@@ -121,6 +132,10 @@ export default function NewOrderPage() {
     }
     if (totalQty < selectedProduct.moq) {
       setErrorMessageText(`Kuantitas minimal (MOQ) untuk ${selectedProduct.name} adalah ${selectedProduct.moq} pcs (total saat ini ${totalQty} pcs).`);
+      return;
+    }
+    if (invalidCustomPrice) {
+      setErrorMessageText("Harga custom minimal Rp1.000 per pcs.");
       return;
     }
     // BR-02 (juga divalidasi server)
@@ -143,6 +158,9 @@ export default function NewOrderPage() {
         items: blocks.flatMap((b) =>
           ORDER_SIZES.filter((s) => b.qty[s] > 0).map((s) => ({ sleeve_type: b.sleeveType, size: s, qty: b.qty[s] }))
         ),
+        custom_unit_prices: customPrice
+          ? Object.fromEntries(blocks.map((b) => [b.sleeveType, customPrices[b.sleeveType]]))
+          : undefined,
       });
       router.push(`/orders/${order.id}`);
     } catch (err) {
@@ -151,10 +169,11 @@ export default function NewOrderPage() {
     }
   };
 
-  if (activeRole !== "admin") {
+  // Owner dapat mengakses semua fitur
+  if (activeRole !== "admin" && activeRole !== "owner") {
     return (
       <div className="max-w-xl mx-auto">
-        <ErrorState error={new ApiError("Hanya Admin yang dapat menginput pesanan (BR-02).", 403)} />
+        <ErrorState error={new ApiError("Hanya Admin (atau Owner) yang dapat menginput pesanan (BR-02).", 403)} />
       </div>
     );
   }
@@ -280,7 +299,17 @@ export default function NewOrderPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2">
                 <label htmlFor="product" className="block text-xs font-semibold text-zinc-700 mb-1">Katalog Produk</label>
-                <select id="product" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} className={inputCls}>
+                <select
+                  id="product"
+                  value={selectedProductId}
+                  onChange={(e) => {
+                    setSelectedProductId(e.target.value);
+                    // Harga custom ikut kembali ke harga katalog produk baru
+                    const base = products.find((p) => p.id === e.target.value)?.basePrice ?? 0;
+                    if (customPrice) setCustomPrices({ pendek: base, panjang: base });
+                  }}
+                  className={inputCls}
+                >
                   {products.map((prod) => (
                     <option key={prod.id} value={prod.id}>
                       {prod.name} — {formatRupiah(prod.basePrice)}/pcs (MOQ: {prod.moq})
@@ -316,7 +345,25 @@ export default function NewOrderPage() {
                         }))}
                       />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {customPrice && (
+                        <label className="flex items-center gap-1.5 text-xs text-dash-muted">
+                          Harga/pcs (Rp)
+                          <input
+                            type="number"
+                            min={1000}
+                            step={500}
+                            value={customPrices[block.sleeveType] || ""}
+                            onChange={(e) =>
+                              setCustomPrices((prev) => ({ ...prev, [block.sleeveType]: Math.max(0, Math.floor(Number(e.target.value) || 0)) }))
+                            }
+                            aria-label={`Harga custom per pcs varian ${index + 1}`}
+                            className={`w-28 px-2 py-1 text-xs rounded-lg border bg-white font-mono tabular-nums focus:outline-none focus:ring-1 focus:ring-zinc-400 ${
+                              customPrices[block.sleeveType] < 1000 ? "border-dash-danger-line" : "border-dash-line"
+                            }`}
+                          />
+                        </label>
+                      )}
                       <span className="text-xs text-dash-muted">
                         Jumlah: <strong className="font-mono tabular-nums text-zinc-900">{blockTotal(block)} pcs</strong>
                       </span>
@@ -361,6 +408,13 @@ export default function NewOrderPage() {
                   </Button>
                 )}
               </div>
+
+              <Switch
+                checked={customPrice}
+                onChange={handleCustomPriceChange}
+                label="Harga Custom"
+                description={`Ubah harga per pcs khusus pesanan ini (harga katalog ${formatRupiah(unitPrice)}/pcs tidak berubah).`}
+              />
 
               {confirmDisableAdvanced && (
                 <div className="p-3 rounded-xl border border-dash-danger-line bg-dash-danger-soft text-xs text-dash-danger-strong flex flex-wrap items-center justify-between gap-2 animate-slide-down" role="alert">
@@ -438,7 +492,9 @@ export default function NewOrderPage() {
                 <span className="text-[11px] text-zinc-500 block">Total Nilai Tagihan:</span>
                 <span className="text-lg font-bold font-mono text-zinc-900 tabular-nums">{formatRupiah(totalAmount)}</span>
                 <span className="text-[10px] text-zinc-400 block mt-0.5 tabular-nums">
-                  ({totalQty} pcs × {formatRupiah(unitPrice)})
+                  {customPrice
+                    ? `(${blocks.map((b) => `${blockTotal(b)} pcs × ${formatRupiah(customPrices[b.sleeveType])}`).join(" + ")} — harga custom)`
+                    : `(${totalQty} pcs × ${formatRupiah(unitPrice)})`}
                 </span>
               </div>
 
@@ -466,7 +522,7 @@ export default function NewOrderPage() {
               Batal
             </Button>
           </Link>
-          <Button variant="primary" type="submit" size="md" disabled={isSubmitting || !selectedProduct || totalQty === 0}>
+          <Button variant="primary" type="submit" size="md" disabled={isSubmitting || !selectedProduct || totalQty === 0 || invalidCustomPrice}>
             <Save className="w-3.5 h-3.5" />
             {isSubmitting ? "Menyimpan..." : "Simpan Pesanan"}
           </Button>

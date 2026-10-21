@@ -65,9 +65,8 @@ class DesignBoardTest extends TestCase
     {
         $ticket = $this->ticketFor('designer', 'ORD-2026-005');
 
-        // Hanya Designer yang mengambil tiket
+        // Designer yang mengambil tiket (Owner juga boleh karena mengakses semua fitur; Admin tidak)
         $this->api('admin', 'POST', "/design-tickets/{$ticket['id']}/start")->assertForbidden();
-        $this->api('owner', 'POST', "/design-tickets/{$ticket['id']}/start")->assertForbidden();
 
         $this->api('designer', 'POST', "/design-tickets/{$ticket['id']}/start")
             ->assertOk()

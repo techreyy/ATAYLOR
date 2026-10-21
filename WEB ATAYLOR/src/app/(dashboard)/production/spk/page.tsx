@@ -25,7 +25,7 @@ const isoDate = (offset = 0) => localDate(offset);
 
 export default function SpkDispatchPage() {
   const { activeRole } = useRole();
-  const isAdmin = activeRole === "admin";
+  const isAdmin = activeRole === "admin" || activeRole === "owner"; // Owner mengakses semua fitur
   const canDispatch = activeRole === "owner" || activeRole === "manager"; // BR-27
 
   const [spkList, setSpkList] = useState<SpkDocument[]>([]);
@@ -157,7 +157,7 @@ export default function SpkDispatchPage() {
               <ShieldCheck className="w-3.5 h-3.5 text-zinc-600" />
               Gerbang Penerbitan SPK (BR-05, BR-09)
             </CardTitle>
-            {!isAdmin && <span className="text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Khusus Admin</span>}
+            {!isAdmin && <span className="text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Khusus Admin & Owner</span>}
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             {candidates.length === 0 ? (

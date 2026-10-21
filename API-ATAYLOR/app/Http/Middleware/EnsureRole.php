@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Otorisasi berbasis peran di server (SRS §2.3). Menyembunyikan menu di frontend bukan otorisasi.
+ * Owner selalu lolos: Owner dapat mengakses semua fitur tenant (keputusan pemilik 21 Okt 2026).
  */
 class EnsureRole
 {
@@ -15,7 +16,7 @@ class EnsureRole
     {
         $user = $request->user();
 
-        if (! $user || ! in_array($user->role, $roles, true)) {
+        if (! $user || ($user->role !== 'owner' && ! in_array($user->role, $roles, true))) {
             return response()->json([
                 'message' => 'Peran Anda tidak memiliki akses ke aksi ini. Diizinkan: '.implode(', ', $roles).'.',
                 'code' => 'FORBIDDEN_ROLE',

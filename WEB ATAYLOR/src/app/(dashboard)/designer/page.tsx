@@ -40,8 +40,9 @@ function formatDateTime(iso?: string | null): string {
 export default function DesignerPage() {
   const { activeRole } = useRole();
   const isDesigner = activeRole === "designer";
+  const isOwner = activeRole === "owner"; // Owner mengakses semua fitur
   // SRS §2.3: Designer mengunggah mockup; Admin juga boleh (sama dengan detail pesanan). Peran lain memantau.
-  const canUpload = isDesigner || activeRole === "admin";
+  const canUpload = isDesigner || isOwner || activeRole === "admin";
 
   const [tickets, setTickets] = useState<DesignBoardTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +165,7 @@ export default function DesignerPage() {
                         now={now}
                         busy={busyId === ticket.id}
                         disabled={busyId !== null}
-                        canStart={isDesigner && ticket.status === "baru"}
+                        canStart={(isDesigner || isOwner) && ticket.status === "baru"}
                         canUpload={
                           canUpload &&
                           (["dikerjakan", "revisi", "menunggu_acc"].includes(ticket.status) ||

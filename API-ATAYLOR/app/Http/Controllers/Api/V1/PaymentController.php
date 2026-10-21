@@ -35,9 +35,7 @@ class PaymentController extends Controller
     public function store(StorePaymentRequest $request, string $order): JsonResponse
     {
         $model = Order::findOrFail($order);
-        $proofUrl = $request->hasFile('proof')
-            ? $this->files->store($request->file('proof'), 'payment-proofs', $model->tenant_id)
-            : null;
+        $proofUrl = $this->files->store($request->file('proof'), 'payment-proofs', $model->tenant_id);
 
         $payment = $this->payments->record($model, $request->validated(), $proofUrl, $request->user());
 

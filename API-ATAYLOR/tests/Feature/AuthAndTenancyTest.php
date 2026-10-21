@@ -43,9 +43,21 @@ class AuthAndTenancyTest extends TestCase
 
     public function test_role_based_access_is_enforced_server_side(): void
     {
-        $this->api('owner', 'POST', '/orders', [])->assertForbidden();          // hanya Admin input order
+        $this->api('manager', 'POST', '/orders', [])->assertForbidden();        // input order: Admin (& Owner)
         $this->api('admin', 'GET', '/executive/summary')->assertForbidden();    // Executive khusus Owner
         $this->api('designer', 'GET', '/payments')->assertForbidden();          // Kasir khusus Admin
         $this->api('owner', 'GET', '/executive/summary')->assertOk();
+    }
+
+    public function test_owner_can_access_every_feature(): void
+    {
+        // Route yang tertulis untuk peran lain tetap terbuka bagi Owner
+        $this->api('owner', 'GET', '/payments')->assertOk();
+        $this->api('owner', 'POST', '/orders', [])->assertStatus(422);          // lolos otorisasi, ditolak validasi
+        $this->api('owner', 'GET', '/kanban')->assertOk();
+        $this->api('owner', 'GET', '/design-tickets')->assertOk();
+        // Peran lain tidak berubah
+        $this->api('manager', 'GET', '/payments')->assertForbidden();
+        $this->api('designer', 'POST', '/orders', [])->assertForbidden();
     }
 }

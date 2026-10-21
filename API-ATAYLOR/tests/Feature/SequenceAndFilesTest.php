@@ -66,6 +66,26 @@ class SequenceAndFilesTest extends TestCase
         $this->get($tampered)->assertForbidden(); // path diubah => tanda tangan tidak cocok
     }
 
+    public function test_payment_without_proof_is_rejected_for_cash_and_transfer(): void
+    {
+        $orderId = $this->api('admin', 'GET', '/orders')->json('data.0.id');
+        $before = $this->db(fn () => Payment::count());
+
+        foreach (['cash', 'transfer'] as $method) {
+            $this->api('admin', 'POST', "/orders/{$orderId}/payments", ['method' => $method, 'amount' => 1000])
+                ->assertStatus(422)
+                ->assertJsonPath('errors.proof.0', 'Bukti bayar wajib dilampirkan, baik pembayaran tunai maupun transfer.');
+        }
+        $this->assertSame($before, $this->db(fn () => Payment::count()));
+
+        Storage::fake('local');
+        $this->api('admin', 'POST', "/orders/{$orderId}/payments", [
+            'method' => 'cash',
+            'amount' => 1000,
+            'proof' => UploadedFile::fake()->image('nota-tunai.jpg'),
+        ])->assertCreated()->assertJsonPath('data.method', 'cash');
+    }
+
     public function test_oversized_payment_proof_is_rejected_with_clear_message(): void
     {
         Storage::fake('local');

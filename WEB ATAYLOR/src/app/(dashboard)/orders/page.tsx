@@ -70,7 +70,7 @@ export default function OrdersPage() {
             Antrean pesanan terpusat Online (WA) & Offline (Toko) — BR-01 & BR-02
           </p>
         </div>
-        {activeRole === "admin" && (
+        {(activeRole === "admin" || activeRole === "owner") && (
           <Link href="/orders/new">
             <Button variant="primary" size="md">
               <Plus className="w-3.5 h-3.5" />
