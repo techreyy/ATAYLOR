@@ -17,11 +17,21 @@ if errorlevel 1 goto php_rusak
 set BUILD_ULANG=0
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%tools\pindah-port.ps1"
 if errorlevel 1 set BUILD_ULANG=1
+REM Setelah git pull: build ulang otomatis bila kode web lebih baru; library berubah -> perlu SETUP
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%tools\cek-build.ps1"
+if errorlevel 2 goto library_berubah
+if errorlevel 1 set BUILD_ULANG=1
 
 echo [1/3] Menyalakan PostgreSQL...
 pg_ctl -D "%ROOT%.devtools\pgdata" -o "-p 5433" status >nul 2>&1
 if errorlevel 1 pg_ctl -D "%ROOT%.devtools\pgdata" -l "%ROOT%.devtools\pg.log" -o "-p 5433" start -w
 if errorlevel 1 goto pg_gagal
+REM Tabel baru dari git pull (bila ada); tanpa perubahan hanya "Nothing to migrate"
+pushd "%ROOT%API-ATAYLOR"
+php artisan migrate --force --no-interaction
+set MIGRATE_RESULT=%errorlevel%
+popd
+if not "%MIGRATE_RESULT%"=="0" goto migrate_gagal
 
 echo [2/3] Menyalakan Laravel API di http://127.0.0.1:8001 ...
 %CEK%
@@ -37,12 +47,14 @@ if errorlevel 1 goto api_gagal
 echo     API OK.
 
 echo [3/3] Menyalakan frontend di http://localhost:3000 ...
-if "%BUILD_ULANG%"=="1" (
-  echo     Membangun tampilan web, tunggu 1-3 menit...
-  pushd "%ROOT%WEB ATAYLOR"
-  call npm run build
-  popd
-)
+if not "%BUILD_ULANG%"=="1" goto start_web
+echo     Membangun tampilan web, tunggu 1-3 menit...
+pushd "%ROOT%WEB ATAYLOR"
+call npm run build
+set BUILD_RESULT=%errorlevel%
+popd
+if not "%BUILD_RESULT%"=="0" goto build_gagal
+:start_web
 start "A-Taylor Web" /D "%ROOT%WEB ATAYLOR" cmd /k "npx next start -p 3000"
 
 timeout /t 5 >nul
@@ -56,6 +68,26 @@ echo.
 echo [GAGAL] SETUP belum selesai di laptop ini.
 echo   Jalankan SETUP-DEMO.bat dulu (butuh internet) sampai muncul "SETUP SELESAI"
 echo   tanpa tulisan merah, lalu jalankan JALANKAN-DEMO.bat lagi.
+goto gagal
+
+:library_berubah
+echo.
+echo [GAGAL] Ada library baru setelah git pull.
+echo   Jalankan SETUP-DEMO.bat (butuh internet) sampai muncul "SETUP SELESAI",
+echo   lalu jalankan JALANKAN-DEMO.bat lagi.
+goto gagal
+
+:migrate_gagal
+echo.
+echo [GAGAL] Struktur database tidak bisa diperbarui (lihat pesan di atas).
+echo   Foto layar ini dan kirim ke pengembang.
+goto gagal
+
+:build_gagal
+echo.
+echo [GAGAL] Tampilan web gagal di-build (lihat pesan di atas).
+echo   Tutup jendela hitam "A-Taylor Web" yang lama bila masih terbuka,
+echo   lalu jalankan JALANKAN-DEMO.bat lagi. Kalau tetap gagal, jalankan SETUP-DEMO.bat.
 goto gagal
 
 :php_rusak

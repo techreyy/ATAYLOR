@@ -17,6 +17,8 @@
   - Ekspor Excel memakai `phpoffice/phpspreadsheet` ^5 (`app/Services/ExecutiveExcelExport.php`).
   - Catatan: spesifikasi awal menyebut Laravel 11, tetapi Laravel 11 sudah habis masa dukungan keamanan dan diblokir Composer karena 7 security advisory — **jangan turunkan ke 11**.
 - **Lingkungan Dev Lokal (portable, tanpa admin):** `.devtools/` berisi PHP 8.3.35, Composer, PostgreSQL 16.15 (port **5433**, data di `.devtools/pgdata`), API Laravel lokal port **8001**. Jalankan semua dengan `JALANKAN-DEMO.bat`; kembalikan data demo dengan `RESET-DATA-DEMO.bat`.
+  - **Setelah `git pull` cukup `JALANKAN-DEMO.bat`** (sejak 21 Okt 2026): `tools/cek-build.ps1` membandingkan waktu file `WEB ATAYLOR/src`, `public`, & file konfigurasi web dengan `.next/BUILD_ID` → bila lebih baru, `npm run build` otomatis; bila `package-lock.json`/`composer.lock` lebih baru dari hasil instal (`node_modules/.package-lock.json`, `vendor/composer/installed.json`) → pesan "[GAGAL] Ada library baru" → jalankan `SETUP-DEMO.bat` (butuh internet). JALANKAN-DEMO juga menjalankan `php artisan migrate --force` setiap kali (tanpa perubahan = "Nothing to migrate"). **Jika menambah library baru, ingatkan presenter bahwa SETUP-DEMO.bat wajib dijalankan ulang.**
+  - **Versi beku presentasi:** tag Git `v1.0-presentasi` (lihat `CARA-PASANG-DEMO.txt` Langkah 4 & checklist sehari sebelum presentasi). Presentasi berikutnya ditonton dari laptop presenter — **tidak perlu deploy online** (keputusan pemilik 21 Okt 2026).
   - `.devtools/php/php.ini`: `upload_max_filesize = 10M`, `post_max_size = 12M` (bawaan PHP 2M/8M membuat foto HP gagal diunggah). `.devtools` tidak di-commit — **set nilai yang sama di server produksi** (dan `client_max_body_size` bila memakai Nginx). Setelah mengubah php.ini, server API harus dijalankan ulang.
   - Upload foto (bukti bayar, foto QC) dikompres di browser lewat `prepareUpload()` (`src/lib/image.ts`, sisi terpanjang 1920px, JPEG) sebelum dikirim; mockup tidak dikompres, hanya dicek ukurannya. Batas (`UPLOAD_LIMITS_MB`): bukti bayar 5 MB, foto QC 8 MB, mockup 8 MB.
   - Akun demo (kata sandi `ataylor123`): `admin@`, `owner@`, `manager@`, `designer@`, `superadmin@ataylor.demo`; tenant uji isolasi: `admin@tenantb.demo`.
@@ -284,6 +286,19 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-21] — Claude (Claude Code) — Versi Beku `v1.0-presentasi`, JALANKAN-DEMO Build Ulang Otomatis, Ralat Catatan
+- **Permintaan pemilik:** presentasi berikutnya cukup ditonton dari laptop presenter (tanpa online); bekukan versi, perbaiki JALANKAN-DEMO agar build ulang otomatis, ralat catatan, commit & push.
+- **Ralat (penting):** entri-entri 21 Okt sebelumnya (mis. "Owner Akses Semua Fitur", "Commit & Push…", "Grafik Tren Omzet…") menulis bahwa setelah `git pull` cukup `JALANKAN-DEMO.bat` karena "build ulang sekali". **Itu keliru pada saat ditulis**: JALANKAN-DEMO hanya build ulang bila alamat API di build lama bukan port 8001 (`tools/pindah-port.ps1`), sehingga setelah `git pull` biasa tampilan lama tetap dipakai. Yang benar saat itu adalah menjalankan ulang `SETUP-DEMO.bat` (sesuai `CARA-PASANG-DEMO.txt`). Mulai entri ini, perilaku JALANKAN-DEMO diperbaiki sehingga klaim tersebut kini benar. Entri lama tidak diubah (append-only).
+- **Dikerjakan:**
+  1. `tools/cek-build.ps1` (baru): exit 0 = build sesuai kode; 1 = file web lebih baru dari `.next/BUILD_ID` → build ulang; 2 = library npm/composer berubah sejak SETUP → minta SETUP-DEMO.
+  2. `JALANKAN-DEMO.bat`: memanggil cek-build setelah pindah-port; `php artisan migrate --force --no-interaction` setelah PostgreSQL menyala; hasil `npm run build` kini dicek (sebelumnya kegagalan build diabaikan); pesan baru `[GAGAL]` untuk library berubah, migrasi gagal, build gagal (tutup jendela "A-Taylor Web" lama).
+  3. `tools/setup-demo.ps1`: setelah `composer install`, waktu `vendor/composer/installed.json` diperbarui sebagai penanda SETUP (Composer tidak selalu menulis ulang file itu).
+  4. `CARA-PASANG-DEMO.txt`: cara ambil versi terbaru (tutup jendela → `git pull` → JALANKAN-DEMO), cara memakai persis versi `v1.0-presentasi` (`git fetch --tags` → `git checkout v1.0-presentasi`; kembali: `git checkout main` + `git pull`), **checklist sehari sebelum presentasi** (termasuk `RESET-DATA-DEMO.bat` agar data uji — mis. pembayaran uji ORD-2026-002 yang ditolak — hilang), 2 entri masalah baru.
+  5. Tag Git beranotasi **`v1.0-presentasi`** pada commit entri ini, di-push ke GitHub.
+- **File diubah:** `JALANKAN-DEMO.bat` (CRLF), `tools/cek-build.ps1` (baru, CRLF), `tools/setup-demo.ps1` (CRLF), `CARA-PASANG-DEMO.txt`, `AI_GUA.md` (§1, §8).
+- **Verifikasi:** **script .bat/.ps1 belum dijalankan di Windows** (Mac pengembang tidak punya PowerShell). Logika `cek-build.ps1` disimulasikan setara dengan Python pada folder ini: build terbaru → 0; satu file `src` disentuh (meniru `git pull`) → 1; dikembalikan → 0. Akhir baris CRLF dicek dengan `file`. Kode aplikasi tidak berubah.
+- **Next Action:** presenter jalankan checklist di `CARA-PASANG-DEMO.txt` sehari sebelum presentasi; kirim foto layar bila muncul `[GAGAL]`.
 
 ### [2026-10-21] — Claude (Claude Code) — Grafik Tren Omzet Diperbaiki & Pencarian Cepat di Navbar
 - **Permintaan pemilik:** perbaiki grafik tren omzet & tambahkan pencarian pesanan di navbar.

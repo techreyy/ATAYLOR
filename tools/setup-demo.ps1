@@ -162,6 +162,8 @@ Step 'Library PHP (composer install)'
 Push-Location $Api
 try {
     Invoke-Native $Php @($Composer, 'install', '--no-interaction', '--prefer-dist')
+    # Penanda waktu SETUP untuk tools\cek-build.ps1 (composer tidak selalu menulis ulang file ini)
+    (Get-Item 'vendor\composer\installed.json').LastWriteTime = Get-Date
     if (-not (Select-String -Path $ApiEnv -Pattern '^APP_KEY=base64:' -Quiet)) {
         Invoke-Native $Php @('artisan', 'key:generate', '--force')
     }

@@ -90,12 +90,28 @@ LANGKAH 4 - SETELAH PRESENTASI
 - Mematikan demo: tutup semua jendela hitam tadi.
 
 - Mau ambil versi terbaru dari GitHub:
-  buka Command Prompt, lalu ketik:
+  TUTUP dulu semua jendela hitam demo, lalu buka Command Prompt
+  dan ketik:
 
       cd C:\ATAYLOR
       git pull
 
-  lalu jalankan SETUP-DEMO.bat lagi.
+  lalu double-click JALANKAN-DEMO.bat. Bila ada kode tampilan
+  yang baru, JALANKAN-DEMO otomatis membangun ulang tampilan web
+  (sekali saja, 1-3 menit) dan memperbarui database.
+  Bila muncul "[GAGAL] Ada library baru setelah git pull",
+  jalankan SETUP-DEMO.bat dulu (butuh internet), lalu
+  JALANKAN-DEMO.bat lagi.
+
+- Mau memakai PERSIS versi presentasi (tidak ikut perubahan baru):
+  buka Command Prompt, lalu ketik:
+
+      cd C:\ATAYLOR
+      git fetch --tags
+      git checkout v1.0-presentasi
+
+  lalu double-click JALANKAN-DEMO.bat.
+  Kembali ke versi terbaru:  git checkout main  lalu  git pull
 
 
 ----------------------------------------------------------
@@ -123,9 +139,36 @@ KALAU ADA MASALAH
     -> Buka demo di laptop yang menjalankannya (localhost), bukan
        dari HP/laptop lain.
 
+- "[GAGAL] Tampilan web gagal di-build"
+    -> Tutup jendela hitam "A-Taylor Web" yang lama, lalu
+       jalankan JALANKAN-DEMO.bat lagi. Masih gagal: jalankan
+       SETUP-DEMO.bat.
+
+- Tampilan masih versi lama setelah git pull
+    -> Pastikan semua jendela hitam sudah ditutup sebelum
+       JALANKAN-DEMO.bat, lalu tekan Ctrl+F5 di browser.
+
 - Halaman tidak bisa dibuka / port 3000 atau 8001 sudah dipakai
     -> Tutup aplikasi lain yang memakai port itu, atau restart
        laptop, lalu jalankan JALANKAN-DEMO.bat lagi.
+
+
+----------------------------------------------------------
+CHECKLIST SEHARI SEBELUM PRESENTASI
+----------------------------------------------------------
+[ ] 1. Tutup semua jendela hitam demo yang masih terbuka.
+[ ] 2. git pull  (atau  git checkout v1.0-presentasi, lihat
+       Langkah 4).
+[ ] 3. Double-click JALANKAN-DEMO.bat. Tunggu sampai browser
+       terbuka (pertama kali setelah git pull bisa 1-3 menit
+       karena tampilan dibangun ulang). Bila diminta, jalankan
+       SETUP-DEMO.bat dulu (butuh internet).
+[ ] 4. Double-click RESET-DATA-DEMO.bat agar data contoh bersih
+       (hasil coba-coba sebelumnya dihapus), lalu login ulang.
+[ ] 5. Coba login Admin & Owner, buka OMS, Kasir, Kanban,
+       Executive. Pastikan tidak ada pesan error.
+[ ] 6. Hari-H: cukup double-click JALANKAN-DEMO.bat
+       (tidak butuh internet).
 
 
 ----------------------------------------------------------
