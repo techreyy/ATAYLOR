@@ -9,9 +9,8 @@ import { BrandLogo, BrandWordmark } from "@/components/logo";
 import { USER_ROLES, UserRole } from "@/lib/constants";
 import { useRole } from "@/components/shell/role-context";
 import { errorMessage } from "@/components/ui/error-state";
-
-/** Masuk cepat akun demo hanya untuk presentasi lokal; disembunyikan bila NEXT_PUBLIC_DEMO_MODE bukan "true". */
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+// Masuk cepat akun demo hanya di mode demo
+import { DEMO_MODE } from "@/lib/app-mode";
 
 const HIGHLIGHTS = [
   { icon: MessageCircle, title: "Pesanan WA & Toko", text: "Online dan offline masuk satu antrean terpusat." },

@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DEMO_MODE } from "@/lib/app-mode";
 import { RoleSwitcher } from "./role-switcher";
 import { BrandLogo, BrandWordmark } from "@/components/logo";
 
@@ -145,13 +146,15 @@ export function Sidebar({
                       {item.mock && !collapsed && (
                         <span
                           className={cn(
-                            "text-[9px] font-mono px-1.5 py-px rounded-full border transition-colors",
+                            "text-[9px] px-1.5 py-px rounded-full border transition-colors whitespace-nowrap",
+                            DEMO_MODE && "font-mono",
                             isActive
                               ? "bg-black/10 text-dash-ink border-black/15"
                               : "bg-[#F1F2F6] text-dash-muted border-dash-line group-hover:bg-black/10 group-hover:text-dash-ink group-hover:border-black/15"
                           )}
+                          title={DEMO_MODE ? undefined : "Masuk tahap pengembangan berikutnya"}
                         >
-                          MOCK
+                          {DEMO_MODE ? "MOCK" : "Segera"}
                         </span>
                       )}
                     </Link>

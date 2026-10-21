@@ -7,9 +7,9 @@ import { USER_ROLES, UserRole } from "@/lib/constants";
 import { Check, ChevronDown, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
+import { DEMO_MODE } from "@/lib/app-mode";
 
-/** Ganti peran hanya untuk demo; disembunyikan bila NEXT_PUBLIC_DEMO_MODE bukan "true". */
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+// Ganti peran hanya di mode demo (lib/app-mode.ts)
 
 /** Profil ringkas di sidebar: inisial, nama, peran. Klik untuk menu Keluar (+ ganti peran saat demo). */
 export function RoleSwitcher() {

@@ -153,7 +153,7 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 MAIL_MAILER=log
 
-DEMO_LOGIN_ENABLED=true
+DEMO_LOGIN_ENABLED=false
 FRONTEND_URL=http://localhost:3000
 '@ | Set-Content -Path $ApiEnv -Encoding ASCII
 }
@@ -186,4 +186,4 @@ try {
 
 Write-Host ''
 Write-Host 'SETUP SELESAI. Jalankan JALANKAN-DEMO.bat untuk membuka demo.' -ForegroundColor Green
-Write-Host 'Akun demo: admin@ataylor.demo / ataylor123 (atau tombol masuk cepat di halaman login).'
+Write-Host 'Akun: admin@ataylor.demo / ataylor123 (mode fiks). Tombol masuk cepat: jalankan MODE-DEMO.bat.'

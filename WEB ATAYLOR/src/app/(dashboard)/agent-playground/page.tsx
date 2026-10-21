@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
+import { DEMO_MODE } from "@/lib/app-mode";
 import { useRole } from "@/components/shell/role-context";
 
 interface ChatMessage {
@@ -96,7 +97,7 @@ export default function AgentPlaygroundPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-dash-text tracking-tight">Simulasi WhatsApp Bot & Mini Agent</h2>
+            <h2 className="text-xl font-bold text-dash-text tracking-tight">{DEMO_MODE ? "Simulasi " : ""}WhatsApp Bot & Mini Agent</h2>
             <DemoMockBadge />
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">

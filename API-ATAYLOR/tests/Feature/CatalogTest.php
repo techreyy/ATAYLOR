@@ -112,7 +112,7 @@ class CatalogTest extends TestCase
         $this->assertNotEmpty($data['facts']);
 
         // tidak membawa nama / nomor pelanggan
-        $this->assertStringNotContainsString('(Contoh)', $res->getContent());
+        $this->assertStringNotContainsString('Komunitas Futsal Bahteramas', $res->getContent());
         $this->assertStringNotContainsString('0812-', $res->getContent());
 
         $this->api('designer', 'GET', '/ai/order-insights')->assertForbidden();

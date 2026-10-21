@@ -102,7 +102,7 @@ class DatabaseSeeder extends Seeder
 
         // 1. Sedang produksi (Proses Jahit), SPK sudah didispatch Manager
         $this->order('ORD-2026-001', $now->subDays(12), [
-            'customer_name' => 'Dinas Pemuda & Olahraga (Contoh)', 'customer_wa' => '0812-0000-1122', 'channel' => 'offline',
+            'customer_name' => 'Dinas Pemuda & Olahraga', 'customer_wa' => '0812-0000-1122', 'channel' => 'offline',
             'marketing_closer_id' => $closers[0]->id, 'due_date' => $now->addDays(7)->toDateString(),
             'notes' => 'Seragam kontingen, bahan Dryfit Milano.',
         ], [[$p['jersey'], 'Navy Blue / Emas', 'L', 60]], versions: 1, payments: [[4000000, 'transfer', 11]],
@@ -110,14 +110,14 @@ class DatabaseSeeder extends Seeder
 
         // 2. Menunggu pembayaran: slot lock 24 jam aktif + bukti transfer pending untuk demo Kasir
         $this->order('ORD-2026-002', $now->subDays(2), [
-            'customer_name' => 'Komunitas Futsal Bahteramas (Contoh)', 'customer_wa' => '0852-0000-5566', 'channel' => 'online',
+            'customer_name' => 'Komunitas Futsal Bahteramas', 'customer_wa' => '0852-0000-5566', 'channel' => 'online',
             'due_date' => $now->addDays(10)->toDateString(), 'notes' => 'Desain v2 di-ACC via WhatsApp.',
         ], [[$p['jersey'], 'Kuning / Hijau', 'M', 20]], versions: 2, pendingPayment: [1250000, 'transfer'],
             lockedHoursAgo: 4);
 
         // 3. Produksi di QC Pabrik
         $this->order('ORD-2026-003', $now->subDays(14), [
-            'customer_name' => 'PT Tambang Konawe (Contoh)', 'customer_wa' => '0813-0000-9900', 'channel' => 'offline',
+            'customer_name' => 'PT Tambang Konawe', 'customer_wa' => '0813-0000-9900', 'channel' => 'offline',
             'marketing_closer_id' => $closers[1]->id, 'due_date' => $now->addDays(5)->toDateString(),
             'notes' => 'PDL + bordir komputer logo dada & punggung.',
         ], [[$p['pdl'], 'Khaki Tua', 'XL', 100]], versions: 3, payments: [[10000000, 'transfer', 13]],
@@ -125,13 +125,13 @@ class DatabaseSeeder extends Seeder
 
         // 4. Memenuhi gate SPK (DP valid + slot permanen) — untuk demo "Terbitkan SPK"
         $this->order('ORD-2026-004', $now->subDays(3), [
-            'customer_name' => 'Alumni SMAN Kendari 2014 (Contoh)', 'customer_wa' => '0821-0000-6677', 'channel' => 'online',
+            'customer_name' => 'Alumni SMAN Kendari 2014', 'customer_wa' => '0821-0000-6677', 'channel' => 'online',
             'due_date' => $now->addDays(18)->toDateString(), 'notes' => 'Siap penerbitan SPK Final.',
         ], [[$p['polo'], 'Hitam Solid', 'L', 50]], versions: 1, payments: [[2500000, 'transfer', 1]]);
 
         // 5. Pesanan baru (brief lengkap, belum ada desain) — gate SPK harus menolak
         $this->order('ORD-2026-005', $now->subDay(), [
-            'customer_name' => 'Panitia Jalan Sehat RT 05 (Contoh)', 'customer_wa' => '0857-0000-3344', 'channel' => 'offline',
+            'customer_name' => 'Panitia Jalan Sehat RT 05', 'customer_wa' => '0857-0000-3344', 'channel' => 'offline',
             'marketing_closer_id' => $closers[2]->id, 'due_date' => $now->addDays(21)->toDateString(),
             'notes' => 'Sablon logo depan, nomor belakang.',
         ], [
@@ -141,7 +141,7 @@ class DatabaseSeeder extends Seeder
 
         // 6. Terlambat: tenggat lewat, masih di Antrean
         $this->order('ORD-2026-006', $now->subDays(20), [
-            'customer_name' => 'Koperasi Nelayan Lapulu (Contoh)', 'customer_wa' => '0812-0000-7788', 'channel' => 'offline',
+            'customer_name' => 'Koperasi Nelayan Lapulu', 'customer_wa' => '0812-0000-7788', 'channel' => 'offline',
             'marketing_closer_id' => $closers[0]->id, 'due_date' => $now->subDays(2)->toDateString(),
             'notes' => 'Jaket tim, bordir nama.',
         ], [[$p['jaket'], 'Hitam / Abu', 'L', 30]], versions: 1, payments: [[3300000, 'cash', 18]],
@@ -149,14 +149,14 @@ class DatabaseSeeder extends Seeder
 
         // 7. Selesai & lunas
         $this->order('ORD-2026-007', $now->subDays(25), [
-            'customer_name' => 'SD Negeri 3 Kendari (Contoh)', 'customer_wa' => '0813-0000-2211', 'channel' => 'online',
+            'customer_name' => 'SD Negeri 3 Kendari', 'customer_wa' => '0813-0000-2211', 'channel' => 'online',
             'due_date' => $now->subDays(6)->toDateString(), 'notes' => 'Seragam olahraga siswa.',
         ], [[$p['kaos'], 'Biru Muda', 'S', 150]], versions: 2, payments: [[4875000, 'transfer', 24], [4875000, 'cash', 7]],
             spk: true, stages: Order::WIP_STAGES, dispatch: true, finalStatus: 'selesai');
 
         // 8. Menunggu pelunasan (tiba di gudang, QC selesai)
         $this->order('ORD-2026-008', $now->subDays(16), [
-            'customer_name' => 'Remaja Masjid Al-Ikhlas (Contoh)', 'customer_wa' => '0852-0000-4433', 'channel' => 'offline',
+            'customer_name' => 'Remaja Masjid Al-Ikhlas', 'customer_wa' => '0852-0000-4433', 'channel' => 'offline',
             'marketing_closer_id' => $closers[1]->id, 'due_date' => $now->addDay()->toDateString(),
             'notes' => 'Kemeja koko bordir.',
         ], [[$p['polo'], 'Putih Tulang', 'M', 40]], versions: 1, payments: [[1900000, 'transfer', 15]],
@@ -273,7 +273,7 @@ class DatabaseSeeder extends Seeder
             ]);
             if ($dispatch) {
                 $spkDoc->update([
-                    'vendor_name' => 'Mitra Jahit Sultra Mandiri (Contoh)',
+                    'vendor_name' => 'Mitra Jahit Sultra Mandiri',
                     'material_sent_date' => $createdAt->addDays(2)->toDateString(),
                     'spk_receiver' => 'Pak Hendra',
                     'vendor_due_date' => $createdAt->addDays(9)->toDateString(),

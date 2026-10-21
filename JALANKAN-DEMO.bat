@@ -59,7 +59,7 @@ start "A-Taylor Web" /D "%ROOT%WEB ATAYLOR" cmd /k "npx next start -p 3000"
 
 timeout /t 5 >nul
 start "" http://localhost:3000/login
-echo Selesai. Akun demo: admin@ataylor.demo / ataylor123 (atau tombol masuk cepat di halaman login).
+echo Selesai. Akun: admin@ataylor.demo / ataylor123 (tombol masuk cepat hanya di mode demo: MODE-DEMO.bat).
 endlocal
 exit /b 0
 
