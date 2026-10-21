@@ -106,7 +106,7 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 ### 3.3 Bentuk & Layout
 - **Kartu:** `rounded-card` (20px), tanpa border, `shadow-card`, naik ke `shadow-card-hover` saat hover. Header kartu `px-5 pt-4/5`, judul tebal 15px.
 - **Sidebar:** putih (lebar 250px, bisa diciutkan ke 78px lewat tombol ☰ di navbar, tersimpan di localStorage; **di bawah 1024px menjadi drawer** yang digeser masuk dari kiri dengan latar gelap, tertutup otomatis saat pindah halaman), menu aktif/hover = latar emas `dash-primary` teks `dash-ink` `rounded-lg`, label seksi huruf kapital abu.
-- **Navbar:** putih tinggi 64px dengan `shadow-navbar`: tombol ☰, breadcrumb, lonceng notifikasi (`components/shell/notification-bell.tsx`, data live `GET /notifications`). **Tanpa** pil Otomasi / Role (dihapus 19 Okt 2026 atas permintaan pemilik — terlihat seperti pajangan dan menggandakan info sidebar).
+- **Navbar:** putih tinggi 64px dengan `shadow-navbar`: tombol ☰, breadcrumb, **pencarian cepat pesanan** (`components/shell/order-search.tsx`: kode ORD / nama pelanggan / closer lewat `GET /orders?q=`, jeda ketik 250 ms, maks. 6 hasil + badge status, ↑/↓ + Enter membuka detail, Esc menutup, tombol `/` memfokuskan; desktop = kolom selalu tampil, HP = ikon kaca pembesar membuka panel selebar layar; disembunyikan untuk Super Admin), lonceng notifikasi (`components/shell/notification-bell.tsx`, data live `GET /notifications`). **Tanpa** pil Otomasi / Role (dihapus 19 Okt 2026 atas permintaan pemilik — terlihat seperti pajangan dan menggandakan info sidebar).
 - **Profil (atas sidebar):** satu baris ringkas — inisial, nama, nama peran; klik membuka menu "Keluar". Menu "Masuk sebagai" (ganti peran demo, badge `MOCK`) hanya tampil bila `NEXT_PUBLIC_DEMO_MODE=true` di `.env.local`; matikan saat online. Jangan pakai istilah teknis seperti "Aktor RBAC" di UI.
 - **Tombol:** primer emas teks gelap `rounded-lg`, efek angkat 1px + `shadow-primary` (bayangan emas) saat hover; `outline` = putih dengan hover emas lembut.
 - **Input:** `rounded-lg border-dash-line`; fokus global (globals.css) = border emas + ring emas 3px.
@@ -114,6 +114,7 @@ Layout, bentuk, dan animasi mengikuti template **Skydash Free** (referensi: fold
 - **Halaman Login (`/login`, revisi pemilik 21 Okt 2026):** desktop (≥ 1024px) = **dua kolom** `lg:grid-cols-[1.2fr_1fr]` — kiri panel brand `bg-dash-charcoal` (label "A-Taylor Kendari", logo jarum `/logo.png` [jarum putih, cocok di latar gelap] mengambang, judul "Pusat kendali konveksi, dari chat sampai jahitan terakhir.", 3 poin: Pesanan WA & Toko, Kasir & SPK, Produksi Real-time), kanan kartu form seperti sebelumnya. **HP/tablet (< 1024px) tetap satu kartu** (panel brand `hidden lg:flex`). Wordmark `/logo-text.png` berteks gelap → jangan dipakai di panel gelap.
 
 ### 3.4 Tipografi & Data
+- Grafik tren omzet Executive = `components/charts/daily-revenue-chart.tsx` (CSS murni): **semua tanggal periode ditampilkan** (hari tanpa pesanan = garis abu tipis, bukan dilewati), sumbu Y dibulatkan (`formatRupiahShort`: rb/jt/M di `lib/currency.ts`) + garis bantu, label tanggal maks. ±10, tooltip saat batang disorot/difokus (tanggal, nominal, jumlah order), ringkasan total/rata-rata/hari aktif/tertinggi di atas grafik.
 - Font UI **Nunito** (`next/font/google`, sesuai Skydash); `JetBrains Mono` untuk ID, kode SPK, tanggal teknis.
 - **Wajib `tabular-nums`** untuk nominal Rp, DP, sisa tagihan, qty, dan hitungan mundur.
 
@@ -283,6 +284,15 @@ Semua panggilan LLM wajib lewat **satu abstraction layer** (timeout, retry aman,
 ## 8. PROGRESS & AI HANDOFF LOG (APPEND-ONLY)
 > *Setiap AI menambahkan entri baru **di paling atas** daftar ini. Entri lama jangan dihapus atau ditimpa.*
 > Format: `### [YYYY-MM-DD] — <AI> — <judul singkat>` lalu *Dikerjakan*, *File diubah*, *Verifikasi*, *Next Action*.
+
+### [2026-10-21] — Claude (Claude Code) — Grafik Tren Omzet Diperbaiki & Pencarian Cepat di Navbar
+- **Permintaan pemilik:** perbaiki grafik tren omzet & tambahkan pencarian pesanan di navbar.
+- **Dikerjakan:**
+  1. **Grafik** (`components/charts/daily-revenue-chart.tsx`, baru; menggantikan grafik lama di `executive/page.tsx`): sebelumnya hanya tanggal yang ada omzet yang digambar → jarak antar-tanggal tidak terlihat dan tren menyesatkan. Kini semua tanggal `period.from`..`period.to` digambar (kosong = garis abu), sumbu Y dibulatkan dengan garis bantu 0/½/maks., label tanggal dijarangkan (7 hari semua, 30 hari tiap 3, 90 hari tiap 9), tooltip gelap saat hover/fokus keyboard (di dalam area grafik, rata tepi untuk batang di ujung), ringkasan Total periode / Rata-rata per hari / Hari dengan pesanan / Tertinggi. Helper baru `formatRupiahShort()`.
+  2. **Pencarian cepat** (`components/shell/order-search.tsx`, baru; dipasang di `topbar.tsx`): lihat §3.3 Navbar. Memakai endpoint yang sudah ada (`GET /orders?q=`), tanpa perubahan backend.
+- **File diubah:** `WEB ATAYLOR/src/components/charts/daily-revenue-chart.tsx` (baru), `src/components/shell/{order-search.tsx (baru),topbar.tsx}`, `src/lib/currency.ts`, `src/app/(dashboard)/executive/page.tsx`, `AI_GUA.md` (§3.3, §3.4, §8).
+- **Verifikasi:** `tsc --noEmit` bersih; `npm run build` lulus; `next start` dijalankan ulang. Chrome headless (CDP) sebagai Owner: grafik 30 hari (30 batang, tooltip "Sab, 26 Sep · Rp 9.750.000 · 1 order" saat disorot) & 90 hari (90 batang, label tiap 9 hari) di 1440px; ketik "futsal" → 1 hasil ORD-2026-002 → Enter membuka `/orders/{id}`; HP 390px: ikon cari → ketik "ORD-2026" → 6 hasil di panel selebar layar. Dua masalah yang ditemukan saat uji sudah diperbaiki: ikon × ganda (kolom `type=search` bawaan browser → `type=text`) dan panel HP terpotong di kiri (→ `fixed inset-x-4`). Tidak ada data yang diubah. Backend tidak diubah (test tidak perlu dijalankan ulang).
+- **Next Action:** commit + push bila pemilik setuju; laptop presenter `git pull` + `JALANKAN-DEMO.bat`.
 
 ### [2026-10-21] — Claude (Claude Code) — Commit & Push, Uji Bukti Bayar, Sakelar Season ke Database, Tabel OMS
 - **Permintaan pemilik:** jalankan rekomendasi Claude (commit/push → uji → sakelar High/Low Season ke database → tabel OMS).

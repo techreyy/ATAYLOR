@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DailyRevenueChart } from "@/components/charts/daily-revenue-chart";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
 import { ErrorState, Notice, errorMessage } from "@/components/ui/error-state";
 import { executiveRepository } from "@/core/adapters/api/api-spk.adapter";
@@ -69,7 +70,6 @@ export default function ExecutiveDashboardPage() {
   const online = data?.channels.find((c) => c.channel === "online");
   const offline = data?.channels.find((c) => c.channel === "offline");
   const channelRevenue = (online?.revenue ?? 0) + (offline?.revenue ?? 0);
-  const maxDaily = Math.max(1, ...(data?.dailyRevenue.map((d) => d.revenue) ?? [1]));
   const maxWip = Math.max(1, ...Object.values(data?.wipStages ?? { x: 1 }));
 
   return (
@@ -150,24 +150,13 @@ export default function ExecutiveDashboardPage() {
       <Card>
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs font-semibold">Tren Omzet Harian (berdasarkan tanggal pesanan)</CardTitle>
+          <span className="text-[11px] text-dash-muted hidden sm:inline">Sorot batang untuk detail</span>
         </CardHeader>
         <CardContent className="p-4">
           {!data || data.dailyRevenue.length === 0 ? (
             <EmptyState title="Belum ada omzet terkonfirmasi" description="Tidak ada pesanan dengan DP valid pada periode ini." />
           ) : (
-            <div className="overflow-x-auto">
-              <div className="flex items-end gap-1.5 h-40 pt-4 border-b border-zinc-200 min-w-full" style={{ minWidth: data.dailyRevenue.length * 36 }}>
-                {data.dailyRevenue.map((d) => (
-                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group" title={`${d.date}: ${formatRupiah(d.revenue)} (${d.orders} order)`}>
-                    <span className="text-[10px] font-mono text-zinc-500 tabular-nums opacity-0 group-hover:opacity-100 transition-opacity">
-                      {(d.revenue / 1_000_000).toFixed(1)}jt
-                    </span>
-                    <div className="w-full max-w-[40px] bg-dash-primary hover:bg-dash-primary-hover rounded-t-md origin-bottom animate-grow-up transition-all duration-150" style={{ height: `${Math.max(4, pct(d.revenue, maxDaily))}%` }} />
-                    <span className="text-[10px] text-zinc-500 font-mono tabular-nums">{d.date.slice(5)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <DailyRevenueChart from={data.period.from} to={data.period.to} points={data.dailyRevenue} />
           )}
         </CardContent>
       </Card>

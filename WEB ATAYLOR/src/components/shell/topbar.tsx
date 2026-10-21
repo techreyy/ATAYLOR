@@ -4,9 +4,12 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Menu } from "lucide-react";
 import { NotificationBell } from "./notification-bell";
+import { OrderSearch } from "./order-search";
+import { useRole } from "./role-context";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const pathname = usePathname();
+  const { activeRole } = useRole();
 
   const getBreadcrumbTitle = () => {
     if (pathname === "/") return "Ringkasan Sistem";
@@ -43,6 +46,8 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       {/* Action / Indicators */}
       <div className="flex items-center gap-2 md:gap-3">
+        {/* Super Admin tidak mengakses data pesanan tenant */}
+        {activeRole !== "super_admin" && <OrderSearch />}
         <NotificationBell />
       </div>
     </header>
