@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SpkController;
+use App\Http\Controllers\Api\V1\TenantController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,6 +44,8 @@ Route::prefix('v1')->group(function () {
         Route::post('products', [ProductController::class, 'store'])->middleware('role:owner');
         Route::patch('products/{product}', [ProductController::class, 'update'])->middleware('role:owner');
         Route::get('ai/order-insights', [ProductController::class, 'insights'])->middleware('role:admin,owner,manager');
+        // Sakelar High/Low Season (BR-21), keputusan Owner
+        Route::patch('tenant/automation-mode', [TenantController::class, 'updateAutomationMode'])->middleware('role:owner');
 
         // OMS (Slice 1)
         Route::middleware('role:admin,owner,manager,designer')->group(function () {

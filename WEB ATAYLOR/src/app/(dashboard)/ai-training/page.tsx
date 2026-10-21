@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, Notice } from "@/components/ui/error-state";
+import { ErrorState, Notice, errorMessage } from "@/components/ui/error-state";
 import { DemoMockBadge } from "@/components/ui/demo-mock-badge";
 import { Switch } from "@/components/ui/switch";
 import { useRole } from "@/components/shell/role-context";
@@ -27,6 +27,20 @@ export default function AiTrainingPage() {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [editing, setEditing] = useState<CatalogProductOption | "new" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [modeBusy, setModeBusy] = useState(false);
+  const [modeError, setModeError] = useState<string | null>(null);
+
+  const handleModeChange = async () => {
+    setModeBusy(true);
+    setModeError(null);
+    try {
+      await toggleAutomationMode();
+    } catch (err) {
+      setModeError(errorMessage(err));
+    } finally {
+      setModeBusy(false);
+    }
+  };
 
   const loadProducts = useCallback(() => {
     setLoadError(null);
@@ -157,8 +171,8 @@ export default function AiTrainingPage() {
         <CardContent className="p-4 space-y-3 text-xs">
           <Switch
             checked={automationMode === "high_on"}
-            onChange={toggleAutomationMode}
-            disabled={!isOwner}
+            onChange={handleModeChange}
+            disabled={!isOwner || modeBusy}
             label={automationMode === "high_on" ? "Aktif" : "Nonaktif"}
             description={isOwner ? "Pilih sesuai kondisi toko saat ini." : "Hanya Owner yang dapat mengubah pengaturan ini."}
           />
@@ -176,8 +190,9 @@ export default function AiTrainingPage() {
               </p>
             </div>
           </div>
+          {modeError && <p className="text-[11px] text-dash-danger-strong">{modeError}</p>}
           <p className="text-[11px] text-dash-muted">
-            Belum tersambung ke WhatsApp — pilihan ini baru tersimpan di browser ini dan belum mengirim pesan apa pun.
+            Pilihan ini tersimpan untuk seluruh pengguna toko. Belum tersambung ke WhatsApp, jadi belum mengirim pesan apa pun.
           </p>
         </CardContent>
       </Card>

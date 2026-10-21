@@ -77,6 +77,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'tenantId' => $user->tenant_id,
             'tenantName' => $user->tenant?->name,
+            'automationMode' => $user->tenant?->automation_mode,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,

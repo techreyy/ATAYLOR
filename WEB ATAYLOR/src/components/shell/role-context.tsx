@@ -4,8 +4,6 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { UserRole } from "@/lib/constants";
 import { apiFetch, TOKEN_KEY, tokenStore } from "@/core/api/client";
 
-const AUTOMATION_KEY = "ataylor_automation_mode";
-
 export interface SessionUser {
   id: string;
   tenantId: string | null;
@@ -13,6 +11,8 @@ export interface SessionUser {
   name: string;
   email: string;
   role: UserRole;
+  /** Sakelar High/Low Season tenant (BR-21), dari tabel tenants */
+  automationMode?: "high_on" | "low_off" | null;
 }
 
 interface RoleContextType {
@@ -24,9 +24,9 @@ interface RoleContextType {
   setActiveRole: (role: UserRole) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  // Sakelar High/Low Season (BR-21) — masih MOCK, belum tersimpan ke tabel tenants
+  // Sakelar High/Low Season (BR-21) — tersimpan di tenants.automation_mode, hanya Owner yang mengubah
   automationMode: "high_on" | "low_off";
-  toggleAutomationMode: () => void;
+  toggleAutomationMode: () => Promise<void>;
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
@@ -36,16 +36,8 @@ type AuthResponse = { token: string; user: SessionUser };
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
-  const [automationMode, setAutomationMode] = useState<"high_on" | "low_off">("high_on");
 
   useEffect(() => {
-    try {
-      const savedMode = localStorage.getItem(AUTOMATION_KEY) as "high_on" | "low_off" | null;
-      if (savedMode) setAutomationMode(savedMode);
-    } catch {
-      /* abaikan */
-    }
-
     if (!tokenStore.get()) {
       setReady(true);
       return;
@@ -68,9 +60,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         apiFetch<{ user: SessionUser }>("/auth/me")
           .then((res) => setUser(res.user))
           .catch(() => setUser(null));
-      }
-      if (e.key === AUTOMATION_KEY && (e.newValue === "high_on" || e.newValue === "low_off")) {
-        setAutomationMode(e.newValue);
       }
     };
     window.addEventListener("storage", onStorage);
@@ -102,14 +91,15 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  const toggleAutomationMode = () => {
+  const automationMode = user?.automationMode ?? "high_on";
+
+  const toggleAutomationMode = async () => {
     const next = automationMode === "high_on" ? "low_off" : "high_on";
-    setAutomationMode(next);
-    try {
-      localStorage.setItem(AUTOMATION_KEY, next);
-    } catch {
-      /* abaikan */
-    }
+    const res = await apiFetch<{ automationMode: "high_on" | "low_off" }>("/tenant/automation-mode", {
+      method: "PATCH",
+      body: { automation_mode: next },
+    });
+    setUser((prev) => (prev ? { ...prev, automationMode: res.automationMode } : prev));
   };
 
   return (

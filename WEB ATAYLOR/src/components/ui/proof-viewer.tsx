@@ -56,7 +56,7 @@ export function ProofThumb({ url, label, className }: { url?: string | null; lab
     <>
       <button type="button" onClick={() => setOpen(true)} className={cn(box, "relative group bg-zinc-50")} aria-label={`Perbesar ${label}`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- berkas privat bertanda tangan dari API, bukan aset statis */}
-        <img src={url} alt={label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" onError={() => setBroken(true)} />
+        <img src={url} alt={label} className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105" onError={() => setBroken(true)} />
         <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
           <ZoomIn className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
         </span>

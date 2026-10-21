@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Filter, CheckCircle2, Clock, ExternalLink, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Search, Filter, CheckCircle2, Clock, ChevronRight, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const today = () => localDate();
 
 export default function OrdersPage() {
   const { activeRole } = useRole();
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -169,8 +171,8 @@ export default function OrdersPage() {
                     <th className="py-2.5 px-3">Kanal & Closer</th>
                     <th className="py-2.5 px-3">Status & Slot Lock</th>
                     <th className="py-2.5 px-3 text-right">Total Nilai</th>
-                    <th className="py-2.5 px-3 text-right">Dibayar & Sisa</th>
-                    <th className="py-2.5 px-3 text-right">Aksi</th>
+                    <th className="py-2.5 px-3">Pembayaran</th>
+                    <th className="py-2.5 px-3" aria-label="Buka detail" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -178,10 +180,23 @@ export default function OrdersPage() {
                     const meta = orderStatusMeta(order.status);
                     const late =
                       order.dueDate < today() && !["selesai", "dibatalkan", "menunggu_pelunasan"].includes(order.status);
+                    const paidPct = order.totalAmount > 0 ? Math.min(100, Math.round((order.paidAmount / order.totalAmount) * 100)) : 0;
+                    const paidOff = order.totalAmount > 0 && order.remainingBalance === 0;
                     return (
-                      <tr key={order.id} className="hover:bg-dash-hover/50 transition-colors">
+                      // Seluruh baris membuka detail; kode pesanan tetap tautan agar bisa dibuka lewat keyboard
+                      <tr
+                        key={order.id}
+                        onClick={() => router.push(`/orders/${order.id}`)}
+                        className="hover:bg-dash-hover/60 transition-colors cursor-pointer group"
+                      >
                         <td className="py-2.5 px-3">
-                          <span className="font-mono font-bold text-zinc-900 tabular-nums">{order.orderCode}</span>
+                          <Link
+                            href={`/orders/${order.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-mono font-bold text-zinc-900 tabular-nums hover:text-dash-primary-strong"
+                          >
+                            {order.orderCode}
+                          </Link>
                           <p className="text-[11px] text-zinc-400 font-mono tabular-nums">
                             {new Date(order.createdAt).toLocaleDateString("id-ID")}
                           </p>
@@ -221,33 +236,35 @@ export default function OrdersPage() {
                             <p className="text-[10px] text-zinc-500">Tahap: {stageLabel(order.wipStage)}</p>
                           )}
                           {order.slotLockStatus === "temp_24h" && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-mono">
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                               <Clock className="w-3 h-3" /> Lock 24j
                             </span>
                           )}
                           {order.slotLockStatus === "permanent" && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-mono">
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                               <CheckCircle2 className="w-3 h-3" /> Slot Permanen
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-zinc-900 text-right tabular-nums">
+                        <td className="py-2.5 px-3 font-bold text-zinc-900 text-right tabular-nums whitespace-nowrap">
                           {formatRupiah(order.totalAmount)}
                         </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <div className="font-mono text-emerald-700 font-medium tabular-nums">
-                            {formatRupiah(order.paidAmount)}
+                        <td className="py-2.5 px-3 min-w-[150px]">
+                          <div className="flex items-center justify-between gap-2 text-[11px] tabular-nums">
+                            <span className={paidOff ? "font-semibold text-emerald-700" : "font-semibold text-zinc-800"}>
+                              {paidOff ? "Lunas" : formatRupiah(order.paidAmount)}
+                            </span>
+                            <span className="text-zinc-400">{paidPct}%</span>
                           </div>
-                          <div className="font-mono text-zinc-400 text-[11px] tabular-nums">
-                            Sisa: {formatRupiah(order.remainingBalance)}
+                          <div className="mt-1 h-1.5 rounded-full bg-zinc-100 overflow-hidden" role="progressbar" aria-valuenow={paidPct} aria-valuemin={0} aria-valuemax={100} aria-label="Persentase dibayar">
+                            <div className={`h-full rounded-full ${paidOff ? "bg-dash-success" : "bg-dash-primary"}`} style={{ width: `${paidPct}%` }} />
                           </div>
+                          {!paidOff && (
+                            <p className="mt-0.5 text-[10px] text-zinc-400 tabular-nums whitespace-nowrap">Sisa {formatRupiah(order.remainingBalance)}</p>
+                          )}
                         </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <Link href={`/orders/${order.id}`}>
-                            <Button variant="outline" size="sm">
-                              Detail <ExternalLink className="w-3 h-3 ml-0.5 text-zinc-400" />
-                            </Button>
-                          </Link>
+                        <td className="py-2.5 pl-1 pr-3 text-right">
+                          <ChevronRight className="w-4 h-4 text-zinc-300 inline transition-all duration-200 group-hover:text-dash-primary-strong group-hover:translate-x-0.5" />
                         </td>
                       </tr>
                     );
