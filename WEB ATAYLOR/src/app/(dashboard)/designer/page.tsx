@@ -94,7 +94,7 @@ export default function DesignerPage() {
     act(ticket, async () => {
       const r = await orderRepository.sendDesignVersion(ticket.orderId, files[ticket.id]);
       setFiles((prev) => ({ ...prev, [ticket.id]: null }));
-      return r.isPaidRevision ? `${r.message} Catatan: revisi ini melewati batas gratis (BR-17).` : r.message;
+      return r.isPaidRevision ? `${r.message} Catatan: revisi ini melewati batas gratis.` : r.message;
     });
 
   if (loading) {
@@ -116,11 +116,10 @@ export default function DesignerPage() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-dash-text tracking-tight">CRM Designer & Tiket Mockup</h2>
-            <Badge variant="emerald" className="whitespace-nowrap">Live · Database</Badge>
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Tiket dibuat otomatis saat pesanan masuk (BR-04). Ambil tiket, unggah mockup berversi; ACC & revisi dicatat Admin
-            di detail pesanan (BR-06, BR-17).
+            Tiket dibuat otomatis saat pesanan masuk. Ambil tiket, unggah mockup berversi; ACC & revisi dicatat Admin
+            di detail pesanan.
             {!canUpload && " Peran Anda hanya dapat memantau."}
           </p>
         </div>

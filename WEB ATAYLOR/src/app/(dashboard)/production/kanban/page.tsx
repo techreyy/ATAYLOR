@@ -104,10 +104,9 @@ export default function KanbanPage() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-dash-text tracking-tight">Kanban WIP Produksi</h2>
-            <Badge variant="emerald">Live · Database</Badge>
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">
-            5 tahap resmi (BR-12): maju 1 tahap; rework wajib alasan; tiba di gudang wajib foto QC (BR-24).
+            5 tahap produksi: maju 1 tahap; mundur (rework) wajib alasan; tiba di gudang wajib foto QC.
             {!canMove && " Peran Anda hanya dapat memantau."}
           </p>
         </div>
@@ -182,7 +181,7 @@ export default function KanbanPage() {
                                 onClick={() => setPending({ order, target: KANBAN_STAGES[idx - 1].id, kind: "rework" })}
                                 disabled={busy}
                                 className="text-[10px] text-red-700 hover:text-red-900 font-medium flex items-center gap-0.5 disabled:opacity-50"
-                                title="Rework mundur tahap (wajib alasan — BR-12)"
+                                title="Rework mundur tahap (wajib alasan)"
                               >
                                 <RotateCcw className="w-3 h-3" /> Rework
                               </button>
@@ -225,7 +224,7 @@ export default function KanbanPage() {
                 </div>
                 <p className="text-xs text-zinc-600 mb-3">
                   Memundurkan <strong>{pending.order.orderCode}</strong> ke <strong>{stageLabel(pending.target)}</strong> wajib
-                  disertai alasan tertulis (BR-12). Alasan tersimpan di riwayat WIP & audit log.
+                  disertai alasan tertulis. Alasan tersimpan di riwayat WIP & audit log.
                 </p>
                 <textarea
                   rows={3}
@@ -239,7 +238,7 @@ export default function KanbanPage() {
               <>
                 <div className="flex items-center gap-2 text-zinc-800 mb-2">
                   <Camera className="w-4 h-4" />
-                  <h3 className="font-bold text-sm text-zinc-900">Unggah Foto Hasil QC (BR-24)</h3>
+                  <h3 className="font-bold text-sm text-zinc-900">Unggah Foto Hasil QC</h3>
                 </div>
                 <p className="text-xs text-zinc-600 mb-3">
                   <strong>{pending.order.orderCode}</strong> akan dinyatakan tiba di gudang toko. Foto fisik hasil QC wajib

@@ -79,7 +79,7 @@ class ExecutiveService
                 'cashIn' => 'Kas masuk = jumlah pembayaran berstatus valid berdasarkan tanggal validasi kasir.',
                 'outstanding' => 'Piutang = sisa tagihan pesanan terkonfirmasi.',
                 'bottleneck' => 'Tahap WIP dengan jumlah pesanan aktif terbanyak saat ini.',
-                'commission' => 'Komisi marketing belum dihitung: rumus BR-18 belum final (MOCK).',
+                'commission' => 'Komisi marketing belum dihitung: rumusnya belum disetujui Owner (MOCK).',
             ],
         ];
     }

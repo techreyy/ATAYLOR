@@ -64,10 +64,9 @@ export default function OrdersPage() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-dash-text tracking-tight">OMS / Pesanan Konveksi</h2>
-            <Badge variant="emerald">Live · Database</Badge>
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Antrean pesanan terpusat Online (WA) & Offline (Toko) — BR-01 & BR-02
+            Antrean pesanan terpusat Online (WA) & Offline (Toko)
           </p>
         </div>
         {(activeRole === "admin" || activeRole === "owner") && (
@@ -140,7 +139,6 @@ export default function OrdersPage() {
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs font-semibold flex items-center justify-between w-full">
             <span>Daftar Transaksi ({orders.length} Pesanan)</span>
-            <span className="text-[11px] text-zinc-400 font-mono font-normal">Tabel: orders</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">

@@ -72,7 +72,7 @@ class NotificationService
                 $hours = (int) ceil(now()->diffInMinutes($o->slot_lock_expires_at) / 60);
 
                 return $this->item('slot_lock_expiring', $o->id, $hours <= 6 ? 'danger' : 'warning', 'Slot lock 24 jam segera berakhir',
-                    "Sisa ± {$hours} jam — DP belum divalidasi, kuota dilepas otomatis (BR-07).", $o, $o->slot_lock_expires_at);
+                    "Sisa ± {$hours} jam — DP belum divalidasi, kuota dilepas otomatis.", $o, $o->slot_lock_expires_at);
             });
     }
 
@@ -113,7 +113,7 @@ class NotificationService
     {
         return Order::where('status', 'menunggu_pelunasan')->get()
             ->map(fn (Order $o) => $this->item('awaiting_settlement', $o->id, 'info', 'Menunggu pelunasan',
-                'Barang sudah di gudang; sisa tagihan Rp '.number_format($o->remaining_balance, 0, ',', '.').' (BR-11).', $o, $o->updated_at));
+                'Barang sudah di gudang; sisa tagihan Rp '.number_format($o->remaining_balance, 0, ',', '.').'.', $o, $o->updated_at));
     }
 
     private function collectSpkNotDispatched(): Collection
@@ -122,7 +122,7 @@ class NotificationService
             ->whereHas('order', fn ($q) => $q->whereNotIn('status', self::CLOSED_STATUSES))
             ->get()
             ->map(fn (SpkDocument $s) => $this->item('spk_not_dispatched', $s->id, 'warning', 'SPK belum diserahkan ke vendor',
-                "{$s->spk_number} — isi data dispatch vendor (BR-27).", $s->order, $s->issued_at));
+                "{$s->spk_number} — isi data dispatch vendor.", $s->order, $s->issued_at));
     }
 
     private function item(string $type, string $sourceId, string $severity, string $title, string $message, Order $order, ?CarbonInterface $at): array

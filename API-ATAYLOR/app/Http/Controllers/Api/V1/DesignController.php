@@ -63,7 +63,7 @@ class DesignController extends Controller
 
         $this->designs->approve($model, $data, $request->user());
 
-        return response()->json(['message' => 'ACC tercatat. Slot kuota dikunci sementara 24 jam (BR-07).']);
+        return response()->json(['message' => 'ACC tercatat. Slot kuota dikunci sementara 24 jam.']);
     }
 
     public function requestRevision(Request $request, string $version): JsonResponse

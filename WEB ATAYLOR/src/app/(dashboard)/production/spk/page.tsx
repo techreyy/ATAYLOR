@@ -136,10 +136,9 @@ export default function SpkDispatchPage() {
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold text-dash-text tracking-tight">SPK Final & Dispatch Vendor</h2>
-          <Badge variant="emerald">Live · Database</Badge>
         </div>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Admin hanya menerbitkan SPK (BR-09). Kontak vendor, kirim bahan & dispatch dicatat Owner/Manager (BR-27).
+          SPK diterbitkan setelah desain di-ACC dan DP valid. Kontak vendor, kirim bahan & dispatch dicatat Owner/Manager.
         </p>
       </div>
 
@@ -155,7 +154,7 @@ export default function SpkDispatchPage() {
           <CardHeader className="px-5 pt-4 pb-1">
             <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-zinc-600" />
-              Gerbang Penerbitan SPK (BR-05, BR-09)
+              Syarat Penerbitan SPK
             </CardTitle>
             {!isAdmin && <span className="text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Khusus Admin & Owner</span>}
           </CardHeader>
@@ -182,7 +181,7 @@ export default function SpkDispatchPage() {
 
                 {gate && selectedOrder && (
                   <div className="p-3 rounded-md bg-zinc-50 border border-zinc-200 space-y-2 text-xs">
-                    <GateLine ok={gate.design_approved} label="Desain di-ACC secara sah (BR-05)" okText="ACC SAH" failText="BELUM ACC" />
+                    <GateLine ok={gate.design_approved} label="Desain di-ACC secara sah" okText="ACC SAH" failText="BELUM ACC" />
                     <GateLine
                       ok={gate.payment_valid}
                       label={`DP valid ≥ ${formatRupiah(selectedOrder.dpRequired)}`}
@@ -216,7 +215,7 @@ export default function SpkDispatchPage() {
           <CardHeader className="px-5 pt-4 pb-1">
             <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-zinc-600" />
-              Catat Dispatch Vendor Eksternal (BR-27)
+              Catat Dispatch Vendor Eksternal
             </CardTitle>
             {!canDispatch && (
               <span className="text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Khusus Owner / Manager</span>

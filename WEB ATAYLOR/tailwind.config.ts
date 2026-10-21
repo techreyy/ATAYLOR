@@ -82,6 +82,15 @@ const config: Config = {
         },
         "grow-up": { from: { transform: "scaleY(0)" }, to: { transform: "scaleY(1)" } },
         "grow-right": { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } },
+        // Halaman login: logo mengambang & ornamen lingkaran melayang pelan
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        drift: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(24px, -18px) scale(1.05)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.25s ease-out both",
@@ -92,6 +101,9 @@ const config: Config = {
         shimmer: "shimmer 1.4s linear infinite",
         "grow-up": "grow-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
         "grow-right": "grow-right 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
+        float: "float 6s ease-in-out infinite",
+        drift: "drift 12s ease-in-out infinite",
+        "drift-slow": "drift 16s ease-in-out infinite reverse",
       },
     },
   },

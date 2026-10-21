@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Brain, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -47,13 +46,12 @@ export function OrderInsightsPanel() {
           <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5 text-zinc-600" /> Yang Dipelajari AI dari Pesanan
           </CardTitle>
-          <Badge variant="emerald">Live · Database</Badge>
         </div>
         <SegmentedControl ariaLabel="Periode data" value={`${days}` as `${Days}`} onChange={(v) => setDays(Number(v) as Days)} options={PERIODS} />
       </CardHeader>
       <CardContent className="p-4 space-y-4 text-xs">
         <p className="text-dash-muted">
-          Dihitung dari semua pesanan — termasuk yang diinput manual di toko — karena semua masuk satu antrean (BR-01). Hanya angka ringkasan, tanpa
+          Dihitung dari semua pesanan — termasuk yang diinput manual di toko — karena semua masuk satu antrean. Hanya angka ringkasan, tanpa
           nama atau nomor pelanggan. Harga & jadwal yang dijanjikan chatbot tetap diambil dari katalog dan kapasitas, bukan dari sini.
         </p>
 

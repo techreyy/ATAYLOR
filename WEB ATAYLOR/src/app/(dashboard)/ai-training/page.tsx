@@ -72,14 +72,13 @@ export default function AiTrainingPage() {
             <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
               <Package className="w-3.5 h-3.5 text-zinc-600" /> Katalog Produk
             </CardTitle>
-            <Badge variant="emerald">Live · Database</Badge>
           </div>
           {isOwner ? (
             <Button size="sm" onClick={() => setEditing("new")}>
               <Plus className="w-3.5 h-3.5" /> Tambah Produk
             </Button>
           ) : (
-            <span className="text-[11px] text-dash-muted">Hanya Owner yang dapat mengubah katalog (BR-19).</span>
+            <span className="text-[11px] text-dash-muted">Hanya Owner yang dapat mengubah katalog.</span>
           )}
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">

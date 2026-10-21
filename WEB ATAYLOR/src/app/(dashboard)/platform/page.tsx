@@ -27,7 +27,7 @@ export default function PlatformPage() {
             <DemoMockBadge />
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            Pengaturan profil tenant white-label A-Taylor Kendari, manajemen peran (RBAC), dan catatan jejak audit
+            Pengaturan profil tenant white-label A-Taylor Kendari, manajemen peran pengguna, dan catatan jejak audit
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function PlatformPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-zinc-900">
-              <Users className="w-4 h-4 text-blue-600" /> Pengguna Terdaftar (5 Role RBAC)
+              <Users className="w-4 h-4 text-blue-600" /> Pengguna Terdaftar (5 Peran)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">

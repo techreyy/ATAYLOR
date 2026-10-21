@@ -34,7 +34,7 @@ export function ErrorState({ error, onRetry, className }: ErrorStateProps) {
         <Icon className="w-5 h-5" />
       </div>
       <h4 className="text-xs font-semibold text-zinc-800 mb-0.5">
-        {forbidden ? "Akses Ditolak untuk Peran Ini" : offline ? "Server API Tidak Terjangkau" : "Gagal Memuat Data"}
+        {forbidden ? "Akses Ditolak untuk Peran Ini" : offline ? "Server Tidak Terjangkau" : "Gagal Memuat Data"}
       </h4>
       <p className="text-[11px] text-zinc-500 max-w-md mb-3">
         {apiError?.message ?? (error instanceof Error ? error.message : "Terjadi kesalahan tak terduga.")}
@@ -79,8 +79,8 @@ export function Notice({
 export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     const firstField = err.fieldErrors ? Object.values(err.fieldErrors)[0]?.[0] : undefined;
-    const msg = firstField ?? err.message;
-    return err.code && err.code.startsWith("BR-") ? `${err.code}: ${msg}` : msg;
+    // Kode aturan (BR-xx) tetap ada di err.code untuk log, tidak ditampilkan ke staf
+    return firstField ?? err.message;
   }
   return err instanceof Error ? err.message : "Terjadi kesalahan.";
 }

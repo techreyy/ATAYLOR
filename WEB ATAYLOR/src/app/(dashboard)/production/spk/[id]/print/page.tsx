@@ -116,7 +116,7 @@ export default function SpkPrintPage() {
               <strong>Diterbitkan Oleh:</strong> {spk.issuedBy}
             </p>
             <p>
-              <strong>Status Pembayaran:</strong> DP Tervalidasi · Kuota Terkunci Permanen (BR-09)
+              <strong>Status Pembayaran:</strong> DP Tervalidasi · Kuota Terkunci Permanen
             </p>
           </div>
         </div>

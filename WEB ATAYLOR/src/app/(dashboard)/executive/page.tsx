@@ -74,47 +74,49 @@ export default function ExecutiveDashboardPage() {
 
   return (
     <div className="space-y-4 print:space-y-3">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      {/* Header: judul satu baris; filter periode & tombol unduh di baris sendiri agar tidak berdesakan */}
+      <div className="space-y-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-dash-text tracking-tight">Executive Dashboard & Rekap</h2>
-            <Badge variant="emerald">Live · Database</Badge>
-          </div>
+          <h2 className="text-xl font-bold text-dash-text tracking-tight">Executive Dashboard & Rekap</h2>
           <p className="text-xs text-zinc-500 mt-0.5 tabular-nums">
             Periode {from} s.d. {to}
             {data && <> · data per {new Date(data.generatedAt).toLocaleString("id-ID")}</>}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <div className="flex rounded-lg border border-dash-line p-0.5 bg-zinc-50">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setFrom(isoDate(-p.days));
-                  setTo(isoDate());
-                }}
-                className={`px-2.5 py-1 text-xs rounded-full font-semibold transition-all duration-200 ${
-                  from === isoDate(-p.days) && to === isoDate() ? "bg-dash-primary text-dash-ink shadow-primary" : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-lg border border-dash-line p-0.5 bg-zinc-50">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setFrom(isoDate(-p.days));
+                    setTo(isoDate());
+                  }}
+                  className={`px-2.5 py-1 text-xs rounded-full font-semibold transition-all duration-200 ${
+                    from === isoDate(-p.days) && to === isoDate() ? "bg-dash-primary text-dash-ink shadow-primary" : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="px-2 py-1 text-xs rounded-lg border border-dash-line font-mono" aria-label="Dari tanggal" />
+            <span className="text-xs text-dash-muted">s.d.</span>
+            <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="px-2 py-1 text-xs rounded-lg border border-dash-line font-mono" aria-label="Sampai tanggal" />
           </div>
-          <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="px-2 py-1 text-xs rounded-lg border border-dash-line font-mono" aria-label="Dari tanggal" />
-          <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="px-2 py-1 text-xs rounded-lg border border-dash-line font-mono" aria-label="Sampai tanggal" />
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="w-3.5 h-3.5" /> Cetak / PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport("csv")} disabled={!!downloading}>
-            <Download className="w-3.5 h-3.5" /> {downloading === "csv" ? "Mengunduh..." : "Unduh CSV"}
-          </Button>
-          <Button variant="primary" size="sm" onClick={() => handleExport("xlsx")} disabled={!!downloading} title="Rekap + kolom kosong biaya produksi untuk diisi manual">
-            <FileSpreadsheet className="w-3.5 h-3.5" /> {downloading === "xlsx" ? "Mengunduh..." : "Unduh Excel"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="w-3.5 h-3.5" /> Cetak / PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport("csv")} disabled={!!downloading}>
+              <Download className="w-3.5 h-3.5" /> {downloading === "csv" ? "Mengunduh..." : "Unduh CSV"}
+            </Button>
+            <Button variant="primary" size="sm" onClick={() => handleExport("xlsx")} disabled={!!downloading} title="Rekap + kolom kosong biaya produksi untuk diisi manual">
+              <FileSpreadsheet className="w-3.5 h-3.5" /> {downloading === "xlsx" ? "Mengunduh..." : "Unduh Excel"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -148,7 +150,6 @@ export default function ExecutiveDashboardPage() {
       <Card>
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs font-semibold">Tren Omzet Harian (berdasarkan tanggal pesanan)</CardTitle>
-          <span className="text-[11px] text-zinc-400 font-mono">Pure CSS bars</span>
         </CardHeader>
         <CardContent className="p-4">
           {!data || data.dailyRevenue.length === 0 ? (

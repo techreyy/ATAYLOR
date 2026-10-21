@@ -140,7 +140,7 @@ export default function NewOrderPage() {
     }
     // BR-02 (juga divalidasi server)
     if (channel === "offline" && !marketingCloserId) {
-      setErrorMessageText("BR-02: Pesanan Offline wajib mencantumkan Marketing Closer.");
+      setErrorMessageText("Pesanan Offline wajib mencantumkan Marketing Closer.");
       return;
     }
 
@@ -173,7 +173,7 @@ export default function NewOrderPage() {
   if (activeRole !== "admin" && activeRole !== "owner") {
     return (
       <div className="max-w-xl mx-auto">
-        <ErrorState error={new ApiError("Hanya Admin (atau Owner) yang dapat menginput pesanan (BR-02).", 403)} />
+        <ErrorState error={new ApiError("Hanya Admin (atau Owner) yang dapat menginput pesanan.", 403)} />
       </div>
     );
   }
@@ -207,7 +207,7 @@ export default function NewOrderPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Daftar
         </Link>
         <span className="text-[11px] font-mono bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-lg border border-dash-line">
-          Form Input Terpusat (BR-01)
+          Form Input Pesanan
         </span>
       </div>
 
@@ -265,7 +265,7 @@ export default function NewOrderPage() {
               {channel === "offline" ? (
                 <div>
                   <label htmlFor="closer" className="block text-xs font-semibold text-zinc-700 mb-1">
-                    Marketing Closer (Wajib Offline — BR-02) *
+                    Marketing Closer (Wajib untuk Offline) *
                   </label>
                   <select
                     id="closer"
@@ -483,7 +483,7 @@ export default function NewOrderPage() {
           <CardHeader className="px-5 pt-4 pb-1">
             <CardTitle className="text-xs font-semibold text-zinc-800 flex items-center gap-1.5">
               <Calculator className="w-3.5 h-3.5 text-zinc-600" />
-              3. Kalkulasi Otomatis (DP Minimum {dpPercent}% — BR-10)
+              3. Kalkulasi Otomatis (DP Minimum {dpPercent}%)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
@@ -509,7 +509,7 @@ export default function NewOrderPage() {
                 <span className="text-lg font-bold font-mono text-zinc-700 tabular-nums">
                   {formatRupiah(totalAmount - dpRequired)}
                 </span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Ditagih saat tiba di gudang (BR-11)</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Ditagih saat tiba di gudang</span>
               </div>
             </div>
           </CardContent>

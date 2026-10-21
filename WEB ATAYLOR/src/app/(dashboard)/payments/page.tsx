@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ProofThumb } from "@/components/ui/proof-viewer";
 import { ErrorState, Notice, errorMessage } from "@/components/ui/error-state";
 import { paymentRepository } from "@/core/adapters/api/api-payment.adapter";
 import { orderRepository } from "@/core/adapters/api/api-order.adapter";
@@ -89,10 +90,9 @@ export default function PaymentsPage() {
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold text-dash-text tracking-tight">Kasir & Validasi Pembayaran</h2>
-          <Badge variant="emerald">Live · Database</Badge>
         </div>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Verifikasi manual tanpa payment gateway (BR-08, BR-10). Validasi DP saat Slot Lock 24 jam aktif mengunci kuota permanen.
+          Cek bukti bayar tunai & transfer, lalu validasi. Validasi DP saat Slot Lock 24 jam aktif mengunci kuota produksi secara permanen.
         </p>
       </div>
 
@@ -120,8 +120,9 @@ export default function PaymentsPage() {
               <ul className="divide-y divide-zinc-100 text-xs">
                 {pending.map((p) => (
                   <li key={p.id} className="p-3 space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <ProofThumb url={p.proofUrl} label={`Bukti bayar ${p.orderCode} — ${formatRupiah(p.amount)}`} />
+                      <div className="flex-1 min-w-[12rem]">
                         <Link href={`/orders/${p.orderId}`} className="font-mono font-bold text-zinc-900 hover:underline tabular-nums">
                           {p.orderCode}
                         </Link>
@@ -131,11 +132,7 @@ export default function PaymentsPage() {
                           {new Date(p.createdAt).toLocaleString("id-ID")}
                         </p>
                         {p.notes && <p className="text-[11px] text-zinc-600">{p.notes}</p>}
-                        {p.proofUrl && (
-                          <a href={p.proofUrl} target="_blank" rel="noreferrer" className="text-[11px] text-blue-700 hover:underline">
-                            Lihat bukti bayar
-                          </a>
-                        )}
+                        {!p.proofUrl && <p className="text-[11px] text-dash-danger-strong">Pembayaran lama tanpa bukti — cek manual sebelum validasi.</p>}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-sm tabular-nums">{formatRupiah(p.amount)}</span>
@@ -194,11 +191,11 @@ export default function PaymentsPage() {
           <CardHeader className="px-5 pt-4 pb-1">
             <CardTitle className="text-xs font-semibold text-zinc-800 flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-zinc-600" />
-              Aturan Kasir (BR-07, BR-08, BR-10, BR-11)
+              Aturan Kasir
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 text-xs text-zinc-700 space-y-2.5 leading-relaxed">
-            <p><strong>1. Tanpa Gateway:</strong> Tidak ada API mutasi bank. Admin mencocokkan mutasi manual sebelum klik Validasi.</p>
+            <p><strong>1. Cek Manual:</strong> Sistem tidak tersambung ke mutasi bank. Admin mencocokkan bukti bayar &amp; mutasi sebelum klik Validasi.</p>
             <p><strong>2. DP Minimum:</strong> Ditetapkan per produk (default 50%). SPK hanya terbit bila DP valid & kuota permanen.</p>
             <p><strong>3. Slot Lock 24 Jam:</strong> Bila lewat 24 jam sejak ACC tanpa pembayaran valid, kuota dilepas otomatis.</p>
             <p><strong>4. Pelunasan:</strong> Ditagih saat tiba di gudang; pesanan selesai setelah lunas.</p>

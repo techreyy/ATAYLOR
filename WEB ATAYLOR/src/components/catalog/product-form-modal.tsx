@@ -43,8 +43,8 @@ const NUMBER_FIELDS: { key: keyof ProductInput; label: string; suffix: string; m
   { key: "std_duration_days", label: "Durasi produksi standar", suffix: "hari", min: 1, max: 365 },
   { key: "daily_capacity", label: "Kapasitas harian", suffix: "pcs", min: 1, max: 100000 },
   { key: "design_sla_hours", label: "SLA desain", suffix: "jam", min: 1, max: 720 },
-  { key: "dp_min_percent", label: "DP minimum", suffix: "%", min: 0, max: 100, hint: "BR-10, dipakai saat menghitung DP." },
-  { key: "free_revision_limit", label: "Revisi gratis", suffix: "kali", min: 0, max: 20, hint: "Lebih dari ini = revisi berbayar (BR-17)." },
+  { key: "dp_min_percent", label: "DP minimum", suffix: "%", min: 0, max: 100, hint: "Dipakai saat menghitung DP." },
+  { key: "free_revision_limit", label: "Revisi gratis", suffix: "kali", min: 0, max: 20, hint: "Lebih dari ini = revisi berbayar." },
 ];
 
 /** Tambah / ubah produk katalog (khusus Owner, BR-19). */

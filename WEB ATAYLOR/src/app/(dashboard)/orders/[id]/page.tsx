@@ -191,7 +191,7 @@ export default function OrderDetailPage() {
             <Row label={<><User className="w-3.5 h-3.5 text-zinc-400" /> Nama Pelanggan:</>} value={order.customerName} />
             <Row label={<><Phone className="w-3.5 h-3.5 text-zinc-400" /> Kontak WhatsApp:</>} value={<span className="font-mono tabular-nums">{order.customerWa}</span>} />
             <Row label="Kanal Pemesanan:" value={<span className="uppercase">{order.channel}</span>} />
-            <Row label="Marketing Closer (BR-02):" value={order.marketingCloserName || "Kanal Online (Tanpa Closer)"} last />
+            <Row label="Marketing Closer:" value={order.marketingCloserName || "Kanal Online (Tanpa Closer)"} last />
             {order.notes && <p className="text-[11px] text-zinc-500 pt-1 border-t border-zinc-100">Catatan: {order.notes}</p>}
           </CardContent>
         </Card>
@@ -202,11 +202,11 @@ export default function OrderDetailPage() {
           </CardHeader>
           <CardContent className="space-y-2.5 text-xs p-4">
             <Row label="Total Tagihan:" value={<span className="font-mono tabular-nums">{formatRupiah(order.totalAmount)}</span>} />
-            <Row label={<span className="text-amber-700">DP Minimum (BR-10):</span>} value={<span className="font-mono tabular-nums text-amber-700">{formatRupiah(order.dpRequired)}</span>} />
+            <Row label={<span className="text-amber-700">DP Minimum:</span>} value={<span className="font-mono tabular-nums text-amber-700">{formatRupiah(order.dpRequired)}</span>} />
             <Row label={<span className="text-emerald-700">Pembayaran Tervalidasi:</span>} value={<span className="font-mono tabular-nums text-emerald-700">{formatRupiah(order.paidAmount)}</span>} />
             <Row label="Sisa Tagihan:" value={<span className="font-mono tabular-nums">{formatRupiah(order.remainingBalance)}</span>} />
             <Row
-              label="Slot Locking (BR-07/08):"
+              label="Slot Lock:"
               last
               value={
                 order.slotLockStatus === "permanent" ? (
@@ -283,7 +283,7 @@ export default function OrderDetailPage() {
       <Card>
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs flex items-center gap-1.5">
-            <Palette className="w-3.5 h-3.5 text-zinc-600" /> Langkah 1 · Desain & ACC (BR-04, BR-06, BR-17)
+            <Palette className="w-3.5 h-3.5 text-zinc-600" /> Langkah 1 · Desain & ACC
           </CardTitle>
           {ticket && (
             <span className="text-[11px] text-zinc-500">
@@ -346,7 +346,7 @@ export default function OrderDetailPage() {
                     act(async () => {
                       const r = await orderRepository.sendDesignVersion(order.id, mockupFile);
                       setMockupFile(null);
-                      return r.isPaidRevision ? `${r.message} Catatan: revisi ini melewati batas gratis (BR-17).` : r.message;
+                      return r.isPaidRevision ? `${r.message} Catatan: revisi ini melewati batas gratis.` : r.message;
                     })
                   }
                 >
@@ -372,7 +372,7 @@ export default function OrderDetailPage() {
           </div>
           {awaitingAcc && isAdmin && (
             <p className="text-[11px] text-zinc-400">
-              Webhook tombol ACC WhatsApp belum tersambung; Admin mencatat ACC manual dengan bukti (BR-21). ACC memulai Slot Lock 24 jam.
+              Tombol ACC di WhatsApp belum tersambung; Admin mencatat ACC manual dengan bukti. ACC memulai Slot Lock 24 jam.
             </p>
           )}
           {showRevision && awaitingAcc && (
@@ -407,7 +407,7 @@ export default function OrderDetailPage() {
       <Card>
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs flex items-center gap-1.5">
-            <CreditCard className="w-3.5 h-3.5 text-zinc-600" /> Langkah 2 · Pembayaran Manual Kasir (BR-08, BR-11)
+            <CreditCard className="w-3.5 h-3.5 text-zinc-600" /> Langkah 2 · Pembayaran
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-3 text-xs">
@@ -562,7 +562,7 @@ export default function OrderDetailPage() {
       <Card>
         <CardHeader className="px-5 pt-4 pb-1">
           <CardTitle className="text-xs flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-zinc-600" /> Langkah 3 · Gerbang SPK Final (BR-05, BR-09)
+            <FileText className="w-3.5 h-3.5 text-zinc-600" /> Langkah 3 · Syarat SPK Final
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-3 text-xs">
