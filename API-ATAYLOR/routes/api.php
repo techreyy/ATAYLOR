@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AiSandboxController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DesignController;
@@ -44,6 +45,8 @@ Route::prefix('v1')->group(function () {
         Route::post('products', [ProductController::class, 'store'])->middleware('role:owner');
         Route::patch('products/{product}', [ProductController::class, 'update'])->middleware('role:owner');
         Route::get('ai/order-insights', [ProductController::class, 'insights'])->middleware('role:admin,owner,manager');
+        // Chat percobaan AI dengan LLM sungguhan (biaya per token → dibatasi 20 pesan/menit)
+        Route::post('ai/sandbox-chat', [AiSandboxController::class, 'chat'])->middleware(['role:owner', 'throttle:20,1']);
         // Sakelar High/Low Season (BR-21), keputusan Owner
         Route::patch('tenant/automation-mode', [TenantController::class, 'updateAutomationMode'])->middleware('role:owner');
 

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRole } from "@/components/shell/role-context";
 import { ProductFormModal } from "@/components/catalog/product-form-modal";
 import { OrderInsightsPanel } from "@/components/catalog/order-insights-panel";
+import { AiSandboxChat } from "@/components/catalog/ai-sandbox-chat";
 import { catalogRepository } from "@/core/adapters/api/api-catalog.adapter";
 import type { CatalogProductOption } from "@/core/repositories/order.repository";
 import { formatRupiah } from "@/lib/currency";
@@ -159,6 +160,8 @@ export default function AiTrainingPage() {
       </Card>
 
       <OrderInsightsPanel />
+
+      <AiSandboxChat canUse={isOwner} />
 
       {/* Sakelar High/Low Season (BR-21) — keputusan Owner */}
       <Card>

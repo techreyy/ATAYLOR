@@ -35,10 +35,24 @@ export interface OrderInsights {
   facts: string[];
 }
 
+/** Satu pesan chat percobaan AI: "user" = Owner berperan sebagai pelanggan. */
+export interface SandboxMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export interface SandboxReply {
+  reply: string;
+  model: string;
+  usage: { input: number; output: number; thinking: number };
+}
+
 export interface ICatalogRepository {
   /** includeInactive hanya berlaku untuk Owner (server mengabaikannya untuk peran lain). */
   getProducts(includeInactive?: boolean): Promise<CatalogProductOption[]>;
   createProduct(input: ProductInput): Promise<CatalogProductOption>;
   updateProduct(id: string, input: ProductInput): Promise<CatalogProductOption>;
   getOrderInsights(days: 30 | 90 | 365): Promise<OrderInsights>;
+  /** Chat percobaan dengan AI sungguhan (khusus Owner); percakapan tidak disimpan. */
+  sandboxChat(messages: SandboxMessage[]): Promise<SandboxReply>;
 }

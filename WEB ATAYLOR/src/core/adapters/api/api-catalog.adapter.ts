@@ -1,5 +1,5 @@
 import { apiFetch } from "@/core/api/client";
-import type { ICatalogRepository, OrderInsights, ProductInput } from "@/core/repositories/catalog.repository";
+import type { ICatalogRepository, OrderInsights, ProductInput, SandboxMessage, SandboxReply } from "@/core/repositories/catalog.repository";
 import type { CatalogProductOption } from "@/core/repositories/order.repository";
 
 class ApiCatalogAdapter implements ICatalogRepository {
@@ -18,6 +18,10 @@ class ApiCatalogAdapter implements ICatalogRepository {
 
   async getOrderInsights(days: 30 | 90 | 365) {
     return (await apiFetch<{ data: OrderInsights }>("/ai/order-insights", { query: { days: String(days) } })).data;
+  }
+
+  async sandboxChat(messages: SandboxMessage[]) {
+    return apiFetch<SandboxReply>("/ai/sandbox-chat", { method: "POST", body: { messages } });
   }
 }
 
